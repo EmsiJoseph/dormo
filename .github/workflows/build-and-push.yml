@@ -1,0 +1,72 @@
+name: Build and Push Docker Image to Azure Container Registry
+
+# Trigger the workflow on push or pull request to the main branch
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+# Define environment variables
+env:
+  REGISTRY: ${{ secrets.AZURE_ACR_REGISTRY }}  # e.g., myacr.azurecr.io
+  IMAGE_NAME: dormo-app                        # Updated to dormo-app as per your example
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest  # Use an Ubuntu runner
+
+    steps:
+      # Step 1: Checkout the repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Node.js (to use npm or jq for parsing package.json)
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'  # Match the Node.js version used in your Dockerfile
+
+      # Step 3: Extract version from package.json
+      - name: Extract version from package.json
+        id: version
+        run: |
+          VERSION=$(node -p "require('./dormo.client/package.json').version")
+          echo "VERSION_TAG=$VERSION" >> $GITHUB_OUTPUT
+        working-directory: .  # Adjust if package.json is in a different directory
+
+      # Step 4: Set up Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Step 5: Log in to Azure Container Registry
+      - name: Log in to Azure Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.AZURE_ACR_USERNAME }}
+          password: ${{ secrets.AZURE_ACR_PASSWORD }}
+
+      # Step 6: Build and push the Docker image with multiple tags
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .                    # Build context (root of repo)
+          file: ./Dockerfile            # Path to your Dockerfile
+          push: true                    # Push to ACR if successful
+          tags: |                       # Multiple tags
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION_TAG }}
+          cache-from: type=gha          # Use GitHub Actions cache
+          cache-to: type=gha,mode=max   # Export cache for future builds
+          # Uncomment the next line for a fresh build every time
+          # no-cache: true
+
+      # Step 7: Verify the push (optional debugging step)
+      - name: List images pushed
+        run: |
+          echo "Images pushed:"
+          echo "- ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+          echo "- ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION_TAG }}"
