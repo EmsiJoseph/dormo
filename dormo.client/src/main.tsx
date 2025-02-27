@@ -1,10 +1,51 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+import {StrictMode, useEffect} from 'react'
+import ReactDOM from 'react-dom/client'
+import {RouterProvider, createRouter} from '@tanstack/react-router'
 import './index.css'
-import App from './App.tsx'
+import {Provider} from 'react-redux'
+import {store} from '@/core/application/store/store'
+import {useAppDispatch} from '@/core/presentation/hooks/use-app-dispatch'
+import {checkAuthStatus} from '@/core/application/store/auth/auth-slice'
+import {routeTree} from './routeTree.gen'
+import {queryClient} from "@/lib/query-client.ts";
+import {QueryClientProvider} from "@tanstack/react-query";
+import {ThemeProvider} from "@/core/presentation/components/theme-provider.tsx";
+import {Toaster} from "@/core/presentation/components/ui/sonner"
+import AuthModal from "@/core/presentation/components/auth/auth-modal.tsx";
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+const router = createRouter({routeTree})
+
+declare module '@tanstack/react-router' {
+    interface Register {
+        router: typeof router
+    }
+}
+
+function App() {
+    const dispatch = useAppDispatch()
+
+    useEffect(() => {
+        dispatch(checkAuthStatus())
+    }, [dispatch])
+
+    return <RouterProvider router={router}/>
+}
+
+const rootElement = document.getElementById('root')!
+
+if (!rootElement.innerHTML) {
+    const root = ReactDOM.createRoot(rootElement)
+    root.render(
+        <StrictMode>
+            <Provider store={store}>
+                <QueryClientProvider client={queryClient}>
+                    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+                        <App/>
+                        <AuthModal/>
+                        <Toaster richColors closeButton position="bottom-right"/>
+                    </ThemeProvider>
+                </QueryClientProvider>
+            </Provider>
+        </StrictMode>
+    )
+}

@@ -1,9 +1,10 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import {defineConfig} from 'vite';
+import {TanStackRouterVite} from '@tanstack/router-plugin/vite'
+import preact from '@preact/preset-vite';
 import fs from 'fs';
 import path from 'path';
 import child_process from 'child_process';
-import { env } from 'process';
+import {env} from 'process';
 
 const baseFolder =
     env.APPDATA !== undefined && env.APPDATA !== ''
@@ -15,7 +16,7 @@ const certFilePath = path.join(baseFolder, `${certificateName}.pem`);
 const keyFilePath = path.join(baseFolder, `${certificateName}.key`);
 
 if (!fs.existsSync(baseFolder)) {
-    fs.mkdirSync(baseFolder, { recursive: true });
+    fs.mkdirSync(baseFolder, {recursive: true});
 }
 
 if (!fs.existsSync(certFilePath) || !fs.existsSync(keyFilePath)) {
@@ -27,7 +28,7 @@ if (!fs.existsSync(certFilePath) || !fs.existsSync(keyFilePath)) {
         '--format',
         'Pem',
         '--no-password',
-    ], { stdio: 'inherit', }).status) {
+    ], {stdio: 'inherit',}).status) {
         throw new Error("Could not create certificate.");
     }
 }
@@ -36,8 +37,11 @@ const target = env.ASPNETCORE_HTTPS_PORT ? `https://localhost:${env.ASPNETCORE_H
     env.ASPNETCORE_URLS ? env.ASPNETCORE_URLS.split(';')[0] : 'https://localhost:7164';
 
 // https://vitejs.dev/config/
+
+const apiVersion = env.API_VERSION || '/api/v1.0';
 export default defineConfig({
-    plugins: [react()],
+    plugins: [preact(),
+        TanStackRouterVite({target: 'react', autoCodeSplitting: true})],
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './src'),
@@ -45,9 +49,10 @@ export default defineConfig({
     },
     server: {
         proxy: {
-            '^/weatherforecast': {
+            [apiVersion]: {
                 target,
-                secure: false
+                secure: false,
+                changeOrigin: true
             }
         },
         port: 52333,

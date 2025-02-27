@@ -1,39 +1,148 @@
+using System.Text.Json;
+using System.Threading.RateLimiting;
+using Asp.Versioning;
+using Dormo.Server.Constants;
+using Dormo.Server.Controllers;
+using Dormo.Server.Controllers.Interfaces;
+using Dormo.Server.Data;
+using Dormo.Server.Data.Models;
+using Dormo.Server.Middleware;
+using Dormo.Server.Services;
+using Dormo.Server.Services.Interfaces;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
+using Scalar.AspNetCore;
 
-namespace Dormo.Server
-{
-    public class Program
+var builder = WebApplication.CreateBuilder(args);
+var configuration = builder.Configuration;
+
+// Core Services
+builder.Services.AddOutputCache();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
     {
-        public static void Main(string[] args)
-        {
-            var builder = WebApplication.CreateBuilder(args);
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.WriteIndented = true;
+    });
 
-            // Add services to the container.
+// Register services for dependency injection
+// builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IDormService, DormService>();
+// builder.Services.AddScoped<IBookingService, BookingService>();
+// builder.Services.AddScoped<IVisitService, VisitService>();
+// builder.Services.AddScoped<IDormmateService, DormmateService>();
+// builder.Services.AddScoped<IDormMatchService, DormMatchService>();
+// builder.Services.AddScoped<IVerificationService, VerificationService>();
+// builder.Services.AddScoped<ICommunityService, CommunityService>();
+// builder.Services.AddScoped<IReviewService, ReviewService>();
+// builder.Services.AddScoped<INotificationService, NotificationService>();
+// builder.Services.AddScoped<IPaymentService, PaymentService>();
+// builder.Services.AddScoped<IReportService, ReportService>();
+// builder.Services.AddScoped<ISearchService, SearchService>();
+// builder.Services.AddScoped<IMessageService, MessageService>();
 
-            builder.Services.AddControllers();
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-            builder.Services.AddOpenApi();
+// Register controllers
+builder.Services.AddScoped<IDormController, DormController>();
+// builder.Services.AddScoped<IUserController, UserController>();
 
-            var app = builder.Build();
+// Add service in ConfigureServices
+builder.Services.AddGlobalExceptionHandler();
 
-            app.UseDefaultFiles();
-            app.MapStaticAssets();
+// Rate Limiting
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddSlidingWindowLimiter("PerUserPolicy", opt =>
+    {
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.PermitLimit = 100;
+        opt.QueueLimit = 10;
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+    });
+});
 
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.MapOpenApi();
-            }
 
-            app.UseHttpsRedirection();
+// Database
+string? connection = builder.Environment.IsDevelopment()
+    ? builder.Configuration.GetConnectionString("LocalDefaultConnection")
+    : configuration["ConnectionStrings:ProdDefaultConnection"];
+if (string.IsNullOrEmpty(connection))
+    throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-            app.UseAuthorization();
+builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connection));
+
+// Add Identity
+builder.Services.AddIdentity<User, IdentityRole>(options =>
+    {
+        options.Password.RequireDigit = true;
+        options.Password.RequiredLength = 8;
+        options.Password.RequireLowercase = true;
+        options.Password.RequireUppercase = true;
+        options.Password.RequireNonAlphanumeric = true;
+    })
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
+
+// Configure cookie authentication
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/api/login";
+    options.LogoutPath = "/api/logout";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.ExpireTimeSpan = TimeSpan.FromHours(1);
+});
+
+builder.Services.AddAuthorization();
+
+// API Versioning
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(ApiVersionConstants.MajorVersion, ApiVersionConstants.MinorVersion);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+    options.ApiVersionReader = ApiVersionReader.Combine(
+        new UrlSegmentApiVersionReader(),
+        new HeaderApiVersionReader(ApiVersionConstants.HeaderName),
+        new QueryStringApiVersionReader(ApiVersionConstants.QueryStringParam));
+});
 
 
-            app.MapControllers();
+// OpenAPI
+builder.Services.AddOpenApi();
 
-            app.MapFallbackToFile("/index.html");
+var app = builder.Build();
 
-            app.Run();
-        }
-    }
+app.UseDefaultFiles();
+// app.MapStaticAssets();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.MapScalarApiReference();
+    app.MapOpenApi();
+    app.UseExceptionHandler("/Error");
 }
+else
+{
+    app.UseExceptionHandler("/Error");
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.UseOutputCache();
+app.UseRateLimiter();
+app.UseMiddleware<GlobalExceptionHandler>();
+
+// Add middleware in Configure (before routing/endpoints)
+app.UseGlobalExceptionHandler();
+
+app.MapControllers();
+
+app.MapFallbackToFile("/index.html");
+
+app.Run();
