@@ -1,10 +1,10 @@
-﻿import {Form, FormControl, FormField, FormItem, FormMessage} from "../ui/form";
+﻿import {Form, FormControl, FormField, FormItem, FormMessage} from "@/core/presentation/components/ui/form";
 import {Button} from "../ui/button";
-import {FloatingLabelInput} from "../ui/floating-label-input";
+import {FloatingLabelInput} from "@/core/presentation/components/ui/floating-label-input";
 import {EmailFormValues} from "@/core/domain/schemas/auth-schemas";
 import {useForm} from "react-hook-form";
 import Google from "@/assets/google-icon.svg";
-import Separator from "@/core/presentation/components/shared/separator.tsx";
+import Separator from "@/core/presentation/components/shared/separator";
 
 interface EmailFormProps {
     onSubmit: (data: EmailFormValues) => Promise<void>;

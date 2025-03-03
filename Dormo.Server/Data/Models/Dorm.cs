@@ -64,11 +64,11 @@ public class Dorm : BaseEntity<int>
     // One-to-Many relationship
     public virtual ICollection<Image> Images { get; set; } = new List<Image>();
 
-    // Many-to-Many relationships through bridge tables
+    // Many-to-Many relationships - Simplified approach
     public virtual ICollection<DormTag> DormTags { get; set; } = new List<DormTag>();
     public virtual ICollection<DormAmenity> DormAmenities { get; set; } = new List<DormAmenity>();
 
-    // Navigation properties for convenience
+    // Direct navigation collections for better querying
     [NotMapped]
     public virtual ICollection<Tag> Tags => DormTags.Select(dt => dt.Tag!).ToList();
 

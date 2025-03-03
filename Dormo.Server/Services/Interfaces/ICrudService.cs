@@ -9,11 +9,13 @@ namespace Dormo.Server.Services.Interfaces;
 /// <typeparam name="TRequest">The request type to perform CRUD operations on.</typeparam>
 /// <typeparam name="TKey">The type of the request's primary key.</typeparam>
 /// <typeparam name="TFilter">The type of the filter used for querying entities.</typeparam>
-public interface ICrudService<TRequest, TKey, TFilter, TDto, TPaginatedDto> 
+/// <typeparam name="TPaginatedDto"></typeparam>
+/// <typeparam name="TDto"></typeparam>
+public interface ICrudService<TRequest, TKey, TFilter, TDto, TPaginatedDto>
     where TRequest : class
     where TDto : class
     where TFilter : BaseFilter
-    where TPaginatedDto : PaginatedDto<TDto>
+    where TPaginatedDto : class
 {
     /// <summary>
     /// Creates a new request in the data store.
@@ -34,22 +36,13 @@ public interface ICrudService<TRequest, TKey, TFilter, TDto, TPaginatedDto>
     /// Retrieves all entities with optional filtering, pagination, and sorting.
     /// </summary>
     /// <param name="filter">An optional filter expression.</param>
-    /// <param name="includeDeleted">Whether to include soft-deleted entities.</param>
     /// <returns>A collection of entities.</returns>
     Task<TPaginatedDto> GetAllAsync(TFilter filter);
 
     /// <summary>
-    /// Gets the total count of entities matching the filter.
-    /// </summary>
-    /// <param name="filter">An optional filter expression.</param>
-    /// <param name="includeDeleted">Whether to include soft-deleted entities.</param>
-    /// <returns>The total count of entities.</returns>
-    Task<int> GetCountAsync(TFilter filter);
-
-    /// <summary>
     /// Updates an existing request.
     /// </summary>
-    /// <param name="request">The request with updated values.</param>
+    /// <param name="dto"></param>
     /// <returns>True if the update succeeds, false otherwise (e.g., request not found).</returns>
     Task<bool> UpdateAsync(TDto dto);
 

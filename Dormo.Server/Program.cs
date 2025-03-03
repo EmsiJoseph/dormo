@@ -136,9 +136,6 @@ app.UseAuthorization();
 
 app.UseOutputCache();
 app.UseRateLimiter();
-app.UseMiddleware<GlobalExceptionHandler>();
-
-// Add middleware in Configure (before routing/endpoints)
 app.UseGlobalExceptionHandler();
 
 app.MapControllers();

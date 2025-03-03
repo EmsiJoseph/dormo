@@ -10,11 +10,11 @@ import {
 import {useSelector} from "react-redux";
 import {RootState} from "@/core/application/store/store.ts";
 import {useAppDispatch} from "@/core/presentation/hooks/use-app-dispatch.ts";
-import {logout} from "@/core/application/store/auth/auth-slice.ts";
 import {useNavigate} from "@tanstack/react-router";
 import {unauthorizedMenu, tenantMenu, ownerMenu} from "../../../application/configs/menu-configs.ts";
 import {Roles} from "@/core/application/constants/roles.ts";
 import {openAuthModal} from "@/core/application/store/auth-modal/auth-modal-slice.ts";
+import React from "react";
 
 export default function AccountBtn() {
     const dispatch = useAppDispatch();
@@ -22,16 +22,6 @@ export default function AccountBtn() {
     const {user, isAuthenticated} = useSelector((state: RootState) => state.auth);
 
     const handleMenuItemClick = async (href: string) => {
-        if (href === '#') {
-            try {
-                await dispatch(logout()).unwrap();
-                window.location.reload();
-            } catch (error) {
-                console.error('Logout failed:', error);
-            }
-            return;
-        }
-
         if (href === '/auth') {
             if (!isAuthenticated) {
                 dispatch(openAuthModal({returnPath: '/'}));
@@ -51,16 +41,15 @@ export default function AccountBtn() {
         return (
             <>
                 {menuConfig.items.map((item, index) => (
-                    <>
+                    <React.Fragment key={item.label}>
                         {menuConfig.separatorIndices.includes(index) && <DropdownMenuSeparator/>}
                         <DropdownMenuItem
-                            key={item.label}
-                            className={item.className}
+                            className={`${item.className || ''}`}
                             onClick={() => handleMenuItemClick(item.href)}
                         >
                             {item.label}
                         </DropdownMenuItem>
-                    </>
+                    </React.Fragment>
                 ))}
             </>
         );
@@ -86,6 +75,18 @@ export default function AccountBtn() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="mt-2 py-2 w-64 rounded-2xl">
                 {renderMenuItems()}
+                {isAuthenticated && user && (
+                    <>
+                        <DropdownMenuSeparator/>
+
+                        <DropdownMenuItem
+                            className="text-destructive hover:bg-destructive/10 data-[highlighted]:text-destructive data-[highlighted]:bg-destructive/10"
+                            onClick={() => console.log("TODO")}
+                        >
+                            Log out
+                        </DropdownMenuItem>
+                    </>
+                )}
             </DropdownMenuContent>
         </DropdownMenu>
     );

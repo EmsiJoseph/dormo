@@ -144,6 +144,36 @@ public class ApplicationDbContext : IdentityDbContext<User>
             .HasForeignKey(d => d.CategoryId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // Configure many-to-many relationships explicitly for better performance
+        
+        // Dorm <-> Tag (many-to-many)
+        builder.Entity<DormTag>()
+            .HasKey(dt => dt.Id);
+            
+        builder.Entity<DormTag>()
+            .HasOne(dt => dt.Dorm)
+            .WithMany(d => d.DormTags)
+            .HasForeignKey(dt => dt.DormId);
+            
+        builder.Entity<DormTag>()
+            .HasOne(dt => dt.Tag)
+            .WithMany(t => t.DormTags)
+            .HasForeignKey(dt => dt.TagId);
+        
+        // Dorm <-> Amenity (many-to-many)
+        builder.Entity<DormAmenity>()
+            .HasKey(da => da.Id);
+            
+        builder.Entity<DormAmenity>()
+            .HasOne(da => da.Dorm)
+            .WithMany(d => d.DormAmenities)
+            .HasForeignKey(da => da.DormId);
+            
+        builder.Entity<DormAmenity>()
+            .HasOne(da => da.Amenity)
+            .WithMany(a => a.DormAmenities)
+            .HasForeignKey(da => da.AmenityId);
+
         // Seeders
         builder.Seed();
     }

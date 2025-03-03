@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Dormo.Server.Controllers.Interfaces;
 
-public interface IDormController : ICrudController<DormRequest, int, DormFilter, DormDto>
+public interface IDormController : ICrudController<DormRequest, int, DormFilter, DormDto, PaginatedDto<DormListingDto>>
 {
     Task<IActionResult> UpdateMetaDataAsync(int dormId, string metaDataType, List<int> metaDataIds);
     Task<IActionResult> UpdateImagesAsync(int dormId, List<ImageRequest> images);

@@ -63,7 +63,11 @@ export default {
           dark: '#05281D',
           text: '#25C977',
         }
-      }
+      },
+      screens: {
+        'xs': '480px',
+        // ...other existing screen sizes
+      },
     }
   },
   plugins: [require("tailwindcss-animate")],

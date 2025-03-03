@@ -4,24 +4,32 @@ import {Tag} from "@/core/domain/entities/Tag.ts";
 import {Image} from "@/core/domain/entities/Image.ts";
 import {Room} from "@/core/domain/entities/Room.ts";
 import {Owner} from "@/core/domain/entities/User.ts";
+import {Category} from "@/core/domain/entities/Category.ts";
 
-export interface Dorm {
-    id: number;
-    name: string;
+export interface Dorm extends DormListing {
     description: string;
-    address: string;
-    rating: number;
-    isVerified: boolean;
     owner: Owner;
-    categoryId: number;
     latitude: number;
     longitude: number;
-    isAvailable: boolean;
-    minPrice: number;
-    images: Image[];
+    category: Category;
     rooms: Room[];
     amenities: Amenity[];
     tags: Tag[];
+}
+
+
+export interface DormListing {
+    id: number;
+    name: string;
+    address: string;
+    ownerId: string;
+    isAvailable: boolean;
+    isVerified: boolean;
+    minPrice: number;
+    availableRooms: number;
+    rating: number;
+    images: Image[];
+    categoryName: string;
 }
 
 export interface DormFilter extends IBaseFilter {

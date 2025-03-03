@@ -65,34 +65,68 @@ public class DormService : IDormService
         return MapToDormDto(dorm);
     }
 
-    public async Task<PaginatedDto<DormDto>> GetAllAsync(DormFilter filter)
+    public async Task<PaginatedDto<DormListingDto>> GetAllAsync(DormFilter filter)
     {
-        var queryTask = ApplyFiltersToQuery(filter);
+        // Validate and normalize filter
+        filter ??= new DormFilter();
+        filter.Page = filter.Page <= 0 ? 1 : filter.Page;
+        filter.PageSize = filter.PageSize <= 0 ? 10 : filter.PageSize > 50 ? 50 : filter.PageSize;
 
-        var query = await queryTask;
+        // Create optimized query for filtering only
+        var baseQuery = _context.Dorms
+            .AsNoTracking()
+            .Where(d => !filter.IncludeDeleted ? !d.IsDeleted : true);
 
-        var dorms = await query.ToListAsync();
-        var mappedDorms = dorms.Select(MapToDormDto);
-        return new PaginatedDto<DormDto>
+        // Apply filters without eager loading
+        var filteredQuery = ApplyFiltersToBaseQuery(baseQuery, filter);
+
+        // Always ensure a deterministic ordering - fixed the ordering logic
+        IOrderedQueryable<Dorm> orderedQuery;
+        
+        if (!string.IsNullOrEmpty(filter.SortBy))
+        {
+            // Use the sorting method that returns IOrderedQueryable
+            orderedQuery = ApplySorting(filteredQuery, filter.SortBy, filter.IsDescending);
+        }
+        else
+        {
+            // Apply default ordering if no sort specified
+            orderedQuery = filteredQuery.OrderBy(d => d.Id);
+        }
+        
+        // Add secondary ordering for consistent paging
+        orderedQuery = orderedQuery.ThenBy(d => d.Id);
+
+        // Get count using optimized query
+        var totalItems = await filteredQuery.CountAsync();
+
+        // Apply pagination to the ordered query
+        var pageNumber = filter.Page ?? 1;
+        var pageSize = filter.PageSize ?? 10;
+        var pagedQuery = orderedQuery
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize);
+
+        // Only include the most essential related data
+        var detailedQuery = pagedQuery
+            .Include(d => d.Category)
+            .Include(d => d.Images)
+            .Include(d => d.Rooms.Where(r => r.IsAvailable))
+            .AsSplitQuery();
+
+        // Execute query and map to lightweight DTO
+        var dorms = await detailedQuery.ToListAsync();
+        var mappedDorms = dorms.Select(MapToDormListingDto);
+
+        return new PaginatedDto<DormListingDto>
         {
             Items = mappedDorms,
-            TotalItems = await GetCountAsync(filter),
-            Page = filter.Page,
-            PageSize = filter.PageSize,
-            HasNext = filter.Page * filter.PageSize < await GetCountAsync(filter)
+            TotalItems = totalItems,
+            Page = pageNumber,
+            PageSize = pageSize,
+            HasNext = pageNumber * pageSize < totalItems
         };
     }
-
-
-    public async Task<int> GetCountAsync(DormFilter filter)
-    {
-        var queryTask = ApplyFiltersToQuery(filter);
-
-        IQueryable<Dorm> query = await queryTask;
-
-        return await query.CountAsync();
-    }
-
     public async Task<bool> UpdateAsync(DormDto dto)
     {
         ValidateDormRequest(dto);
@@ -295,17 +329,34 @@ public class DormService : IDormService
     }
 
 
-    private Task<IQueryable<Dorm>> ApplyFiltersToQuery(DormFilter filter)
+   private IOrderedQueryable<Dorm> ApplySorting(IQueryable<Dorm> query, string sortBy, bool isDescending)
     {
-        var query = _context.Dorms
-            .Include(d => d.Images)
-            .Include(d => d.DormTags).ThenInclude(dt => dt.Tag)  
-            .Include(d => d.DormAmenities).ThenInclude(da => da.Amenity)
-            .Include(d => d.Category)
-            .Include(d => d.Rooms)
-            .Include(d => d.Owner)
-            .AsQueryable();
+        return sortBy.ToLower() switch
+        {
+            SortByAttr.Price => isDescending
+                ? query.OrderByDescending(d => d.Rooms.Min(r => r.PricePerMonth))
+                : query.OrderBy(d => d.Rooms.Min(r => r.PricePerMonth)),
+            SortByAttr.Rating => isDescending
+                ? query.OrderByDescending(d => d.Rating)
+                : query.OrderBy(d => d.Rating),
+            SortByAttr.Availability => isDescending
+                ? query.OrderByDescending(d => d.IsAvailable)
+                : query.OrderBy(d => d.IsAvailable),
+            SortByAttr.CreatedAt => isDescending
+                ? query.OrderByDescending(d => d.CreatedAt)
+                : query.OrderBy(d => d.CreatedAt),
+            SortByAttr.UpdatedAt => isDescending
+                ? query.OrderByDescending(d => d.UpdatedAt)
+                : query.OrderBy(d => d.UpdatedAt),
+            SortByAttr.Verified => isDescending
+                ? query.OrderByDescending(d => d.IsVerified)
+                : query.OrderBy(d => d.IsVerified),
+            _ => query.OrderBy(d => d.Name)
+        };
+    }
 
+    private IQueryable<Dorm> ApplyFiltersToBaseQuery(IQueryable<Dorm> query, DormFilter filter)
+    {
         // Apply filters
         if (filter.CategoryId.HasValue)
             query = query.Where(d => d.CategoryId == filter.CategoryId);
@@ -314,7 +365,7 @@ public class DormService : IDormService
             query = query.Where(d => d.OwnerId == filter.OwnerId);
 
         if (filter.Address != null)
-            query = query.Where(d => d.Address == filter.Address);
+            query = query.Where(d => d.Address.Contains(filter.Address));
 
         if (filter.MinPrice.HasValue)
             query = query.Where(d => d.Rooms.Any(r => r.PricePerMonth >= filter.MinPrice));
@@ -339,48 +390,14 @@ public class DormService : IDormService
         if (filter.TagIds?.Any() == true)
             query = query.Where(d => d.DormTags
                 .Any(dt => filter.TagIds.Contains(dt.TagId)));
+
         if (filter.CreatedAt != default)
             query = query.Where(d => d.CreatedAt >= filter.CreatedAt);
+
         if (filter.UpdatedAt != default)
             query = query.Where(d => d.UpdatedAt >= filter.UpdatedAt);
 
-        // Apply sorting
-        if (!string.IsNullOrEmpty(filter.SortBy))
-        {
-            query = filter.SortBy.ToLower() switch
-            {
-                SortByAttr.Price => filter.IsDescending
-                    ? query.OrderByDescending(d => d.Rooms.Min(r => r.PricePerMonth))
-                    : query.OrderBy(d => d.Rooms.Min(r => r.PricePerMonth)),
-                SortByAttr.Rating => filter.IsDescending
-                    ? query.OrderByDescending(d => d.Rating)
-                    : query.OrderBy(d => d.Rating),
-                SortByAttr.Availability => filter.IsDescending
-                    ? query.OrderByDescending(d => d.IsAvailable)
-                    : query.OrderBy(d => d.IsAvailable),
-                SortByAttr.CreatedAt => filter.IsDescending
-                    ? query.OrderByDescending(d => d.CreatedAt)
-                    : query.OrderBy(d => d.CreatedAt),
-                SortByAttr.UpdatedAt => filter.IsDescending
-                    ? query.OrderByDescending(d => d.UpdatedAt)
-                    : query.OrderBy(d => d.UpdatedAt),
-                SortByAttr.Verified => filter.IsDescending
-                    ? query.OrderByDescending(d => d.IsVerified)
-                    : query.OrderBy(d => d.IsVerified),
-                _ => query.OrderBy(d => d.Name)
-            };
-        }
-
-        // Apply pagination
-        if (filter is { Page: not null, PageSize: not null })
-            query = query.Skip((filter.Page.Value - 1) * filter.PageSize.Value)
-                .Take(filter.PageSize.Value);
-
-
-        if (!filter.IncludeDeleted)
-            query = query.Where(d => !d.IsDeleted);
-
-        return Task.FromResult(query);
+        return query;
     }
 
     private DormDto MapToDormDto(Dorm dorm)
@@ -455,6 +472,30 @@ public class DormService : IDormService
             ],
             IsAvailable = dorm.IsAvailable,
             MinPrice = dorm.Rooms?.Any() == true ? dorm.Rooms.Min(r => r.PricePerMonth) : 0,
+        };
+    }
+
+    private DormListingDto MapToDormListingDto(Dorm dorm)
+    {
+        return new DormListingDto
+        {
+            Id = dorm.Id,
+            Name = dorm.Name,
+            Address = dorm.Address,
+            OwnerId = dorm.OwnerId,
+            IsAvailable = dorm.IsAvailable,
+            IsVerified = dorm.IsVerified,
+            MinPrice = dorm.Rooms?.Any() == true ? dorm.Rooms.Min(r => r.PricePerMonth) : 0,
+            AvailableRooms = dorm.Rooms?.Count(r => r.IsAvailable) ?? 0,
+            Rating = dorm.Rating,
+            Images = dorm.Images.Select(i => new ImageRequest
+            {
+                Url = i.Url,
+                Order = i.Order,
+                Caption = i.Caption,
+                IsPrimary = i.IsPrimary
+            }).ToArray(),
+            CategoryName = dorm.Category?.Name ?? "Uncategorized"
         };
     }
 

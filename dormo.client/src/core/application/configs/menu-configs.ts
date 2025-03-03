@@ -31,7 +31,6 @@ export const tenantMenu: MenuConfig = {
         {label: 'For business', href: '/business'},
         {label: 'Account', href: '/account'},
         {label: 'Help Center', href: '/help'},
-        {label: 'Log out', href: '#', className: 'text-red-600'}
     ],
     separatorIndices: [5, 7, 9]
 };
@@ -47,7 +46,6 @@ export const ownerMenu: MenuConfig = {
         {label: 'Manage listings', href: '/listings'},
         {label: 'Account', href: '/account'},
         {label: 'Help Center', href: '/help'},
-        {label: 'Log out', href: '#', className: 'text-red-600'}
     ],
     separatorIndices: [5, 7, 9]
 };

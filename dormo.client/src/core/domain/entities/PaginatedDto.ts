@@ -3,5 +3,5 @@
     totalItems: number;
     page: number;
     pageSize: number;
-    nextPage: number | null;
+    hasNext: boolean;
 }

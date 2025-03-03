@@ -31,10 +31,10 @@ public class DormController : ControllerBase, IDormController
         // _dormMatchService = dormMatchService;
     }
 
-    [OutputCache(Duration = 60, VaryByQueryKeys = ["DormsCache"])]
+    [OutputCache(Duration = 60, VaryByQueryKeys = ["page", "pageSize", "searchTerm", "categoryId", "ownerId", "minPrice", "maxPrice", "isAvailable", "isVerified", "sortBy", "isDescending"])]
     [HttpGet("")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetAllAsync([FromQuery] DormFilter filter)
+    public async Task<ActionResult<PaginatedDto<DormListingDto>>> GetAllAsync([FromQuery] DormFilter filter)
     {
         var dorms = await _dormService.GetAllAsync(filter);
         return Ok(dorms);
@@ -64,7 +64,7 @@ public class DormController : ControllerBase, IDormController
             CreatedAt = DateTime.UtcNow.AddHours(-1),
             UpdatedAt = DateTime.UtcNow.AddHours(-1)
         });
-        
+
         var dormsByOwner = dorms.Items.Where(d => d.OwnerId == request.OwnerId);
 
         if (dormsByOwner?.Count() >= BusinessRulesConstants.Dorm.MaxListingsPerHour)

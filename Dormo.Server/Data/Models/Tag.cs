@@ -16,6 +16,10 @@ public class Tag : BaseEntity<int>
     [Column(TypeName = "nvarchar(max)")]
     public string? Icon { get; set; } = string.Empty;
 
-    public virtual ICollection<Dorm> Dorms { get; set; } =
-        new List<Dorm>();
+    // Direct navigation to join table
+    public virtual ICollection<DormTag> DormTags { get; set; } = new List<DormTag>();
+    
+    // For convenience (not used in queries)
+    [NotMapped]
+    public virtual ICollection<Dorm> Dorms => DormTags.Select(dt => dt.Dorm!).ToList();
 }

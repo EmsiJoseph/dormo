@@ -1,6 +1,6 @@
 ﻿import {AxiosConfig} from '@/core/data/axios-config';
 import {handleServerResponse} from '@/core/presentation/handlers/api-response-handlers/handle-server-response.ts';
-import {Dorm, DormFilter} from '@/core/domain/entities/Dorm';
+import {Dorm, DormFilter, DormListing} from '@/core/domain/entities/Dorm';
 import {Image} from "@/core/domain/entities/Image";
 import {Room} from "@/core/domain/entities/Room";
 import {PaginatedDto} from "@/core/domain/entities/PaginatedDto.ts";
@@ -8,7 +8,7 @@ import {PaginatedDto} from "@/core/domain/entities/PaginatedDto.ts";
 const dormEndpoint = "/dorm";
 export const DormApi = {
     getAll: async (filter?: DormFilter) => {
-        return handleServerResponse<PaginatedDto<Dorm>>({
+        return handleServerResponse<PaginatedDto<DormListing>>({
             request: () => AxiosConfig.get(dormEndpoint, {params: filter}),
             successMessage: 'Dorms fetched successfully'
         });

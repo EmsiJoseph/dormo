@@ -4,7 +4,7 @@ using Dormo.Server.Data.Requests;
 
 namespace Dormo.Server.Services.Interfaces;
 
-public interface IDormService : ICrudService<DormRequest, int, DormFilter, DormDto, PaginatedDto<DormDto>>
+public interface IDormService : ICrudService<DormRequest, int, DormFilter, DormDto, PaginatedDto<DormListingDto>>
 {
     /// <summary>
     /// Search for dorms by location
