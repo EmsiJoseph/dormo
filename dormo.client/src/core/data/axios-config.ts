@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError, AxiosResponse } from "axios";
 
 const API_VERSION = import.meta.env.VITE_API_VERSION;
 
@@ -9,8 +9,8 @@ const AxiosConfig = axios.create({
 });
 
 AxiosConfig.interceptors.response.use(
-    (response) => response,
-    (error) => {
+    (response: AxiosResponse): AxiosResponse => response,
+    (error: AxiosError): Promise<never> => {
         if (error.response?.status === 401) {
             // window.location.href = '/';
             // TODO: Pop up a modal to inform the user that they have been logged out

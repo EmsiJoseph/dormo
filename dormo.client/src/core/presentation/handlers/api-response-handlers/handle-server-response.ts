@@ -1,4 +1,4 @@
-import axios, {AxiosResponse} from "axios";
+import axios, {  AxiosResponse } from "axios";
 import {SystemMessages} from "@/core/application/constants/messages";
 import {
     IBaseApiResponse,
@@ -27,7 +27,7 @@ export const handleServerResponse = async <T>({
             successMessage,
             data: response.data,
         };
-    } catch (error) {
+    } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
             const errorResponse = error.response?.data;
             

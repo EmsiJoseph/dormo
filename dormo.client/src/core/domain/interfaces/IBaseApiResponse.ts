@@ -1,4 +1,4 @@
-import {AxiosResponse} from "axios";
+import { AxiosResponse } from "axios";
 
 // Base API Response that extends Axios Response
 export interface IBaseApiResponse<T = unknown> extends Omit<AxiosResponse<T>, 'data'> {
