@@ -3,15 +3,15 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-} from "../ui/dialog.tsx";
+} from "../ui/dialog";
 import {useSelector} from "react-redux";
-import {RootState} from "@/core/application/store/store.ts";
-import {useAppDispatch} from "@/core/presentation/hooks/use-app-dispatch.ts";
-import {closeAuthModal} from "@/core/application/store/auth-modal/auth-modal-slice.ts";
+import {RootState} from "@/core/application/store/store";
+import {useAppDispatch} from "@/core/presentation/hooks/use-app-dispatch";
+import {closeAuthModal} from "@/core/application/store/auth-modal/auth-modal-slice";
 import DormoIcon from "@/assets/dormo-icon.svg";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {useForm} from "react-hook-form";
-import {AuthApi} from "@/core/data/api/auth-api.ts";
+import {AuthApi} from "@/core/data/api/auth-api";
 import {
     EmailFormValues,
     emailSchema,
@@ -21,19 +21,19 @@ import {
     loginSchema,
     RegisterFormValues,
     registerSchema,
-} from "../../../domain/schemas/auth-schemas.ts";
+} from "../../../domain/schemas/auth-schemas";
 import {toast} from "sonner";
 import EmailForm from "./email-form";
 import LoginForm from "./login-form";
 import RegisterForm from "./register-form";
 import {useSignalEffect} from "@preact/signals";
-import CompleteProfileForm from "./complete-profile-form.tsx";
+import CompleteProfileForm from "./complete-profile-form";
 import {
     emailSignal,
     authStepSignal,
     isCalendarOpenSignal,
     isSubmittingSignal,
-} from "../../../application/signals/auth-signals.ts";
+} from "../../../application/signals/auth-signals";
 import {format} from "date-fns";
 import { checkAuthStatus } from "@/core/application/store/auth/auth-slice";
 

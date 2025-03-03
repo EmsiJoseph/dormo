@@ -15,12 +15,12 @@ import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-} from "@/core/presentation/components/ui/popover.tsx";
+} from "@/core/presentation/components/ui/popover";
 import {cn} from "@/lib/utils";
 import {format} from "date-fns";
-import {Calendar} from "@/core/presentation/components/ui/calendar.tsx";
-import {RegisterFormValues} from "@/core/domain/schemas/auth-schemas.ts";
-import {Checkbox} from "@/core/presentation/components/ui/checkbox.tsx";
+import {Calendar} from "@/core/presentation/components/ui/calendar";
+import {RegisterFormValues} from "@/core/domain/schemas/auth-schemas";
+import {Checkbox} from "@/core/presentation/components/ui/checkbox";
 import {
     Dialog,
     DialogClose,
@@ -34,7 +34,7 @@ import {
     isCalendarOpenSignal,
     isSubmittingSignal,
     preferredNameSignal,
-} from "../../../application/signals/auth-signals.ts";
+} from "../../../application/signals/auth-signals";
 import {SubmitButton} from "../ui/submit-button";
 import {useEffect} from "react";
 

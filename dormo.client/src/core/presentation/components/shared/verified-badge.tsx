@@ -1,4 +1,4 @@
-﻿import {Badge} from "@/core/presentation/components/ui/badge.tsx";
+﻿import {Badge} from "@/core/presentation/components/ui/badge";
 import {Check} from "lucide-react";
 
 export default function VerifiedBadge({isVerified}: { isVerified: boolean }) {

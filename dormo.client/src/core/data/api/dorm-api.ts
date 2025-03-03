@@ -3,7 +3,7 @@ import {handleServerResponse} from '@/core/presentation/handlers/api-response-ha
 import {Dorm, DormFilter, DormListing} from '@/core/domain/entities/Dorm';
 import {Image} from "@/core/domain/entities/Image";
 import {Room} from "@/core/domain/entities/Room";
-import {PaginatedDto} from "@/core/domain/entities/PaginatedDto.ts";
+import {PaginatedDto} from "@/core/domain/entities/PaginatedDto";
 
 const dormEndpoint = "/dorm";
 export const DormApi = {

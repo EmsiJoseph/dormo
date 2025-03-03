@@ -1,6 +1,6 @@
 "use client"
 
-import { Button, buttonVariants } from "@/core/presentation/components/ui/button.tsx"
+import { Button, buttonVariants } from "@/core/presentation/components/ui/button"
 import { cn } from "@/lib/utils"
 import { differenceInCalendarDays } from "date-fns"
 import { ChevronLeft, ChevronRight } from "lucide-react"

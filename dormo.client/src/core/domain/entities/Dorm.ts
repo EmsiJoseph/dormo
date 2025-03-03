@@ -1,10 +1,10 @@
 import {IBaseFilter} from "@/core/domain/interfaces/IBaseFilter";
-import {Amenity} from "@/core/domain/entities/Amenity.ts";
-import {Tag} from "@/core/domain/entities/Tag.ts";
-import {Image} from "@/core/domain/entities/Image.ts";
-import {Room} from "@/core/domain/entities/Room.ts";
-import {Owner} from "@/core/domain/entities/User.ts";
-import {Category} from "@/core/domain/entities/Category.ts";
+import {Amenity} from "@/core/domain/entities/Amenity";
+import {Tag} from "@/core/domain/entities/Tag";
+import {Image} from "@/core/domain/entities/Image";
+import {Room} from "@/core/domain/entities/Room";
+import {Owner} from "@/core/domain/entities/User";
+import {Category} from "@/core/domain/entities/Category";
 
 export interface Dorm extends DormListing {
     description: string;

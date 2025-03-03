@@ -1,4 +1,4 @@
-﻿import {Avatar, AvatarFallback, AvatarImage} from "@/core/presentation/components/ui/avatar.tsx";
+﻿import {Avatar, AvatarFallback, AvatarImage} from "@/core/presentation/components/ui/avatar";
 import User from "@/assets/user.svg";
 import {
     DropdownMenu,
@@ -6,14 +6,14 @@ import {
     DropdownMenuItem,
     DropdownMenuSeparator,
     DropdownMenuTrigger
-} from "@/core/presentation/components/ui/dropdown-menu.tsx";
+} from "@/core/presentation/components/ui/dropdown-menu";
 import {useSelector} from "react-redux";
-import {RootState} from "@/core/application/store/store.ts";
-import {useAppDispatch} from "@/core/presentation/hooks/use-app-dispatch.ts";
+import {RootState} from "@/core/application/store/store";
+import {useAppDispatch} from "@/core/presentation/hooks/use-app-dispatch";
 import {useNavigate} from "@tanstack/react-router";
-import {unauthorizedMenu, tenantMenu, ownerMenu} from "../../../application/configs/menu-configs.ts";
-import {Roles} from "@/core/application/constants/roles.ts";
-import {openAuthModal} from "@/core/application/store/auth-modal/auth-modal-slice.ts";
+import {unauthorizedMenu, tenantMenu, ownerMenu} from "../../../application/configs/menu-configs";
+import {Roles} from "@/core/application/constants/roles";
+import {openAuthModal} from "@/core/application/store/auth-modal/auth-modal-slice";
 import React from "react";
 
 export default function AccountBtn() {

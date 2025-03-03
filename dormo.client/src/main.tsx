@@ -7,11 +7,11 @@ import {store} from '@/core/application/store/store'
 import {useAppDispatch} from '@/core/presentation/hooks/use-app-dispatch'
 import {checkAuthStatus} from '@/core/application/store/auth/auth-slice'
 import {routeTree} from './routeTree.gen'
-import {queryClient} from "@/lib/query-client.ts";
+import {queryClient} from "@/lib/query-client";
 import {QueryClientProvider} from "@tanstack/react-query";
-import {ThemeProvider} from "@/core/presentation/components/theme-provider.tsx";
+import {ThemeProvider} from "@/core/presentation/components/theme-provider";
 import {Toaster} from "@/core/presentation/components/ui/sonner"
-import AuthModal from "@/core/presentation/components/auth/auth-modal.tsx";
+import AuthModal from "@/core/presentation/components/auth/auth-modal";
 
 const router = createRouter({routeTree})
 

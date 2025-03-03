@@ -1,4 +1,4 @@
-﻿import {DormFilter, DormListing} from "@/core/domain/entities/Dorm.ts";
+﻿import {DormFilter, DormListing} from "@/core/domain/entities/Dorm";
 import {signal} from "@preact/signals";
 
 export const AllDormsSignal = signal<DormListing[]>([]);

@@ -1,8 +1,8 @@
-﻿import {Badge} from "@/core/presentation/components/ui/badge.tsx";
-import {DormListing} from "@/core/domain/entities/Dorm.ts";
+﻿import {Badge} from "@/core/presentation/components/ui/badge";
+import {DormListing} from "@/core/domain/entities/Dorm";
 import {ChevronLeft, ChevronRight, Heart, Star} from "lucide-react";
 import {useSignal, useSignalEffect} from "@preact/signals";
-import VerifiedBadge from "@/core/presentation/components/shared/verified-badge.tsx";
+import VerifiedBadge from "@/core/presentation/components/shared/verified-badge";
 import {motion, AnimatePresence} from "framer-motion"
 
 interface DormCardProps {

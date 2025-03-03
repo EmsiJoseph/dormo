@@ -1,7 +1,7 @@
 import {Link} from "@tanstack/react-router"
 import DormoLogo from '@/assets/dormo-vertical-main.svg'
-import TextLink from "@/core/presentation/components/shared/text-link.tsx";
-import AccountBtn from "@/core/presentation/components/shared/account-btn.tsx";
+import TextLink from "@/core/presentation/components/shared/text-link";
+import AccountBtn from "@/core/presentation/components/shared/account-btn";
 
 export default function DefaultNavigation() {
     return (

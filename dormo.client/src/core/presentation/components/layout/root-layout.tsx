@@ -1,6 +1,6 @@
 import {Outlet} from "@tanstack/react-router"
-import DefaultNavigation from "../shared/default-navigation.tsx"
-import Separator from "@/core/presentation/components/shared/separator.tsx";
+import DefaultNavigation from "../shared/default-navigation"
+import Separator from "@/core/presentation/components/shared/separator";
 
 export default function RootLayout() {
     return (

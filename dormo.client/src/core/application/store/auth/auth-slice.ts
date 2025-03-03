@@ -1,5 +1,5 @@
 import {createAsyncThunk, createSlice} from '@reduxjs/toolkit';
-import {AuthApi} from "@/core/data/api/auth-api.ts";
+import {AuthApi} from "@/core/data/api/auth-api";
 
 import {IErrorResponse, IUserResponse} from "@/core/domain/interfaces/IBaseApiResponse";
 

@@ -4,8 +4,8 @@ import {ChevronLeft} from "lucide-react";
 import {FloatingLabelInput} from "@/core/presentation/components/ui/floating-label-input";
 import {LoginFormValues} from "@/core/domain/schemas/auth-schemas";
 import {useForm} from "react-hook-form";
-import {SubmitButton} from "@/core/presentation/components/ui/submit-button.tsx";
-import {isSubmittingSignal} from "@/core/application/signals/auth-signals.ts";
+import {SubmitButton} from "@/core/presentation/components/ui/submit-button";
+import {isSubmittingSignal} from "@/core/application/signals/auth-signals";
 
 interface LoginFormProps {
     handleBack: () => void;

@@ -1,11 +1,11 @@
 ﻿import {createLazyFileRoute} from "@tanstack/react-router";
 import {DormListing} from "@/core/domain/entities/Dorm";
-import {DormCard} from "@/core/presentation/components/dorm/dorm-card.tsx";
-import {Button} from "@/core/presentation/components/ui/button.tsx";
-import {DormCardSkeletonGrid} from "@/core/presentation/components/dorm/dorm-card-skeleton.tsx";
+import {DormCard} from "@/core/presentation/components/dorm/dorm-card";
+import {Button} from "@/core/presentation/components/ui/button";
+import {DormCardSkeletonGrid} from "@/core/presentation/components/dorm/dorm-card-skeleton";
 
-import {useDormListings} from "@/core/presentation/hooks/use-dorm-listings.ts";
-import {AllDormsSignal, DormFilterSignal} from "@/core/application/signals/dorm-signals.ts";
+import {useDormListings} from "@/core/presentation/hooks/use-dorm-listings";
+import {AllDormsSignal, DormFilterSignal} from "@/core/application/signals/dorm-signals";
 import {useEffect} from "preact/compat";
 
 export const Route = createLazyFileRoute("/")({

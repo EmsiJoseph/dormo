@@ -5,7 +5,7 @@ import {
     ISuccessResponse,
     IUserResponse
 } from "@/core/domain/interfaces/IBaseApiResponse";
-import {LoginFormValues, RegisterFormValues} from "@/core/domain/schemas/auth-schemas.ts";
+import {LoginFormValues, RegisterFormValues} from "@/core/domain/schemas/auth-schemas";
 
 const authEndpoint = "/auth";
 
