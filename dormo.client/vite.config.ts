@@ -33,12 +33,13 @@ if (!fs.existsSync(certFilePath) || !fs.existsSync(keyFilePath)) {
     }
 }
 
-const target = env.ASPNETCORE_HTTPS_PORT ? `https://localhost:${env.ASPNETCORE_HTTPS_PORT}` :
-    env.ASPNETCORE_URLS ? env.ASPNETCORE_URLS.split(';')[0] : 'https://localhost:7164';
-
-// https://vitejs.dev/config/
-
 const apiVersion = env.API_VERSION || '/api/v1.0';
+const isProd = process.env.NODE_ENV === 'production';
+const target = isProd 
+    ? env.VITE_API_BASE_URL || 'https://dormo.azurewebsites.net'
+    : env.ASPNETCORE_HTTPS_PORT ? `https://localhost:${env.ASPNETCORE_HTTPS_PORT}` :
+      env.ASPNETCORE_URLS ? env.ASPNETCORE_URLS.split(';')[0] : 'https://localhost:7164';
+
 export default defineConfig({
     plugins: [preact(),
         TanStackRouterVite({target: 'react', autoCodeSplitting: true})],
@@ -56,9 +57,9 @@ export default defineConfig({
             }
         },
         port: 52333,
-        https: {
+        https: !isProd ? {
             key: fs.readFileSync(keyFilePath),
             cert: fs.readFileSync(certFilePath),
-        }
+        } : undefined
     }
 })
