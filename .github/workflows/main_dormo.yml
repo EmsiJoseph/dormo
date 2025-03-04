@@ -12,6 +12,9 @@ on:
 jobs:
   build:
     runs-on: 'ubuntu-latest'
+    env:
+      VITE_API_BASE_URL: https://dormo.azurewebsites.net
+      API_VERSION: /api/v1.0
 
     steps:
     - uses: actions/checkout@v2
@@ -32,6 +35,9 @@ jobs:
         push: true
         tags: emsidev.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_2e87c5d0f7ed4a76b1e4ddf295c713d1 }}/dormo-app:${{ github.sha }}
         file: ./Dockerfile
+        build-args: |
+          VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}
+          API_VERSION=${{ secrets.API_VERSION }}
 
   deploy:
     runs-on: ubuntu-latest
