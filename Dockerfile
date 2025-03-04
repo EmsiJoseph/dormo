@@ -3,6 +3,7 @@
 # Add these lines near the top of your Dockerfile
 ARG VITE_API_BASE_URL
 ARG API_VERSION
+ARG PROD_CONNECTION_STRING
 
 # This stage is used when running from VS in fast mode (Default for Debug configuration)
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
@@ -44,4 +45,5 @@ RUN dotnet publish "./Dormo.Server.csproj" -c $BUILD_CONFIGURATION -o /app/publi
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+ENV ConnectionStrings__ProdDefaultConnection=${PROD_CONNECTION_STRING}
 ENTRYPOINT ["dotnet", "Dormo.Server.dll"]
