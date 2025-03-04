@@ -33,9 +33,10 @@ import {
     authStepSignal,
     isCalendarOpenSignal,
     isSubmittingSignal,
+    googleUserInfoSignal
 } from "../../../application/signals/auth-signals";
 import {format} from "date-fns";
-import { checkAuthStatus } from "@/core/application/store/auth/auth-slice";
+import {checkAuthStatus} from "@/core/application/store/auth/auth-slice";
 
 export default function AuthModal() {
     const dispatch = useAppDispatch();
@@ -71,6 +72,24 @@ export default function AuthModal() {
         }
     });
 
+    useSignalEffect(() => {
+        if (authStepSignal.value === "complete-profile" && googleUserInfoSignal.value) {
+            const userInfo = googleUserInfoSignal.value;
+
+            // Pre-fill form with Google data
+            completeProfileForm.reset({
+                ...completeProfileForm.getValues(),
+                email: userInfo.email,
+                firstName: userInfo.firstName,
+                lastName: userInfo.lastName,
+                preferredFirstName: userInfo.firstName,
+            });
+
+            // Clear the Google user info signal
+            googleUserInfoSignal.value = null;
+        }
+    });
+
     const onEmailSubmit = async (data: EmailFormValues) => {
         try {
             const response = await AuthApi.isRegistered(data.email);
@@ -90,13 +109,13 @@ export default function AuthModal() {
         try {
             isSubmittingSignal.value = true;
             await AuthApi.login(data);
-            
+
             // Update auth store with current user info
             await dispatch(checkAuthStatus()).unwrap();
-            
+
             isSubmittingSignal.value = false;
             dispatch(closeAuthModal());
-            
+
             // Alternative: force page reload
             // window.location.reload();
         } catch (error) {
@@ -131,13 +150,13 @@ export default function AuthModal() {
 
             console.log("Formatted data:", formattedData);
             await AuthApi.register(formattedData);
-            
+
             // Update auth store with current user info after registration
             await dispatch(checkAuthStatus()).unwrap();
-            
+
             dispatch(closeAuthModal());
             toast.success("Registration successful");
-            
+
             // Alternative: force page reload
             // window.location.reload();
         } catch (error) {
@@ -170,13 +189,14 @@ export default function AuthModal() {
         }
     };
 
-    // Function to reset all form data and signals
+    // Update resetAllData to also reset the googleUserInfoSignal
     const resetAllData = () => {
         // Reset all signals
         authStepSignal.value = "initial";
         emailSignal.value = "";
         isCalendarOpenSignal.value = false;
         isSubmittingSignal.value = false;
+        googleUserInfoSignal.value = null;
 
         // Reset all forms
         emailForm.reset({email: ""});

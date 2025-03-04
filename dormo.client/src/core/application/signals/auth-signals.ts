@@ -7,3 +7,16 @@ export const authStepSignal = signal<"initial" | "login" | "register" | "complet
 export const preferredNameSignal = signal<string>("");
 
 export const isSubmittingSignal = signal<boolean>(false);
+
+// Add new signal for Google user info
+export interface GoogleUserInfo {
+  email: string;
+  firstName: string;
+  lastName: string;
+  profileImageUrl: string;
+}
+
+export const googleUserInfoSignal = signal<GoogleUserInfo | null>(null);
+
+export const isGoogleScriptLoaded = signal<boolean>(false);
+

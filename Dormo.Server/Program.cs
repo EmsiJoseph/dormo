@@ -29,6 +29,7 @@ builder.Services.AddControllers()
 // Register services for dependency injection
 // builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IDormService, DormService>();
+builder.Services.AddScoped<IExternalAuthService, ExternalAuthService>();
 // builder.Services.AddScoped<IBookingService, BookingService>();
 // builder.Services.AddScoped<IVisitService, VisitService>();
 // builder.Services.AddScoped<IDormmateService, DormmateService>();

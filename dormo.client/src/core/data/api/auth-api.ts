@@ -6,6 +6,7 @@ import {
     IUserResponse
 } from "@/core/domain/interfaces/IBaseApiResponse";
 import {LoginFormValues, RegisterFormValues} from "@/core/domain/schemas/auth-schemas";
+import { GoogleUserInfo } from "@/core/application/signals/auth-signals";
 
 const authEndpoint = "/auth";
 
@@ -14,7 +15,16 @@ interface IsRegisteredResponse {
     email: string;
 }
 
+interface GoogleAuthResponse {
+    isExistingUser: boolean;
+    userInfo: GoogleUserInfo;
+}
+
 type RegisterFormValuesWithStringDob = Omit<RegisterFormValues, 'dob'> & { dob: string };
+
+interface GoogleLoginRequest {
+    credential: string;
+}
 
 export const AuthApi = {
     login: async (credentials: LoginFormValues) => {
@@ -54,6 +64,12 @@ export const AuthApi = {
         return handleServerResponse<IsRegisteredResponse>({
             request: () => AxiosConfig.post(authEndpoint, { email }),
         });
-    }
+    },
 
+    googleLogin: async (credential: string) => {
+        return handleServerResponse<GoogleAuthResponse>({
+            request: () => AxiosConfig.post("/api/v1.0/ExternalAuth/google-login", { credential } as GoogleLoginRequest),
+            successMessage: 'Google authentication successful'
+        });
+    },
 };

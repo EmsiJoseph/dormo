@@ -24,13 +24,14 @@ WORKDIR /src
 COPY ["Dormo.Server/Dormo.Server.csproj", "Dormo.Server/"]
 COPY ["dormo.client/dormo.client.esproj", "dormo.client/"]
 
-
-ENV VITE_API_VERSION=${VITE_API_VERSION}
+COPY .env .env
+RUN echo "VITE_API_VERSION=$VITE_API_VERSION" >> .env
 
 RUN dotnet restore "./Dormo.Server/Dormo.Server.csproj"
 COPY . . 
 WORKDIR "/src/Dormo.Server"
 RUN dotnet build "./Dormo.Server.csproj" -c $BUILD_CONFIGURATION -o /app/build
+
 
 # This stage is used to publish the service project to be copied to the final stage
 FROM build AS publish
