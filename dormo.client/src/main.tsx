@@ -14,7 +14,8 @@ import { Toaster } from "@/core/presentation/components/ui/sonner";
 import AuthModal from "@/core/presentation/components/auth/auth-modal";
 
 const routerOptions = {
-  devtoolsEnabled: import.meta.env.DEV,
+  // Use explicit false in production
+  devtoolsEnabled: process.env.NODE_ENV !== 'production' && import.meta.env.DEV !== false,
 };
 
 const router = createRouter({ routeTree, ...routerOptions });
