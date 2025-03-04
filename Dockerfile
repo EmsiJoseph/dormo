@@ -2,7 +2,7 @@
 
 ARG VITE_API_VERSION="/api/v1.0"
 ARG VITE_API_BASE_URL="https://dormo.azurewebsites.net"
-ARG DEV=false
+ARG DEV=true
 
 # This stage is used when running from VS in fast mode (Default for Debug configuration)
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
