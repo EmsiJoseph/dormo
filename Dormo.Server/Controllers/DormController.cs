@@ -54,7 +54,7 @@ public class DormController : ControllerBase, IDormController
         // Get the user id from the claims
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var user = await _userManager.FindByIdAsync(userId!);
-        request.OwnerId = user?.Id;
+        request.OwnerId = user?.Id!;
 
         // Business rules
         // Listing creation must not exceed 5 attempts per hour per owner.

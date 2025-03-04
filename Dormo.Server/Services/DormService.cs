@@ -135,7 +135,7 @@ public class DormService : IDormService
         {
             var dorm = await GetByIdAsync(dto.Id);
 
-            dorm.Name = dto.Name;
+            dorm!.Name = dto.Name;
             dorm.Description = dto.Description;
             dorm.Address = dto.Address;
             dorm.Latitude = dto.Latitude;
