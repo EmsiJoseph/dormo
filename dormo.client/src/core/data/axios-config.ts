@@ -1,6 +1,6 @@
 import axios, { AxiosError, AxiosResponse } from "axios";
 
-const API_VERSION = import.meta.env.VITE_API_VERSION || "/api/v1.0";
+const API_VERSION = import.meta.env.VITE_API_VERSION;
 
 const AxiosConfig = axios.create({
     baseURL: API_VERSION,
