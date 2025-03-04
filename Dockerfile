@@ -3,6 +3,7 @@
 ARG VITE_API_BASE_URL
 ARG API_VERSION
 ARG PROD_CONNECTION_STRING
+ARG VITE_API_VERSION
 
 # This stage is used when running from VS in fast mode (Default for Debug configuration)
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
@@ -29,6 +30,7 @@ COPY ["dormo.client/dormo.client.esproj", "dormo.client/"]
 # At the build stage for your client app, add:
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 ENV API_VERSION=${API_VERSION}
+ENV VITE_API_VERSION=${VITE_API_VERSION}
 
 RUN dotnet restore "./Dormo.Server/Dormo.Server.csproj"
 COPY . . 
