@@ -14,9 +14,11 @@ EXPOSE 8081
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS with-node
 RUN apt-get update
-RUN apt-get install curl
+RUN apt-get install -y curl
 RUN curl -sL https://deb.nodesource.com/setup_20.x | bash
 RUN apt-get -y install nodejs
+# Install TypeScript globally to make 'tsc' available
+RUN npm install -g typescript
 
 FROM with-node AS build
 ARG BUILD_CONFIGURATION=Release
@@ -32,15 +34,24 @@ ENV NODE_ENV=production
 WORKDIR /src
 COPY ["Dormo.Server/Dormo.Server.csproj", "Dormo.Server/"]
 COPY ["dormo.client/dormo.client.esproj", "dormo.client/"]
+# Copy package.json and package-lock.json to install dependencies
+COPY ["dormo.client/package*.json", "dormo.client/"]
 
+# Install client dependencies first
+WORKDIR "/src/dormo.client"
+RUN npm install
+
+# Now continue with the rest of the files
+WORKDIR "/src"
 RUN dotnet restore "./Dormo.Server/Dormo.Server.csproj"
 COPY . .
 
-# Create a .env file for the client build with the environment variables
+# Setup environment for client build
 WORKDIR "/src/dormo.client"
 RUN echo "VITE_API_VERSION=${VITE_API_VERSION}" > .env
 RUN echo "VITE_API_BASE_URL=${VITE_API_BASE_URL}" >> .env
-RUN npm install
+# Verify TypeScript is installed and available
+RUN npm list typescript || npm install --save-dev typescript
 
 WORKDIR "/src/Dormo.Server"
 RUN dotnet build "./Dormo.Server.csproj" -c $BUILD_CONFIGURATION -o /app/build
