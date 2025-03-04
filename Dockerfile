@@ -24,8 +24,7 @@ WORKDIR /src
 COPY ["Dormo.Server/Dormo.Server.csproj", "Dormo.Server/"]
 COPY ["dormo.client/dormo.client.esproj", "dormo.client/"]
 
-COPY .env .env
-RUN echo "VITE_API_VERSION=$VITE_API_VERSION" >> .env
+RUN echo "VITE_API_VERSION=$VITE_API_VERSION" > .env
 
 RUN dotnet restore "./Dormo.Server/Dormo.Server.csproj"
 COPY . . 
