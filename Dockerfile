@@ -1,9 +1,6 @@
 # See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
 ARG VITE_API_VERSION="/api/v1.0"
-ARG VITE_API_BASE_URL="https://dormo.azurewebsites.net"
-ARG VITE_NODE_ENV="production"
-ARG VITE_DEV=false
 
 # This stage is used when running from VS in fast mode (Default for Debug configuration)
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
@@ -27,11 +24,8 @@ WORKDIR /src
 COPY ["Dormo.Server/Dormo.Server.csproj", "Dormo.Server/"]
 COPY ["dormo.client/dormo.client.esproj", "dormo.client/"]
 
-# At the build stage for your client app, add:
-ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+
 ENV VITE_API_VERSION=${VITE_API_VERSION}
-ENV VITE_NODE_ENV=${VITE_NODE_ENV}
-ENV VITE_DEV=${VITE_DEV}
 
 RUN dotnet restore "./Dormo.Server/Dormo.Server.csproj"
 COPY . . 
