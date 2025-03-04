@@ -65,7 +65,7 @@ builder.Services.AddRateLimiter(options =>
 // Database
 string? connection = builder.Environment.IsDevelopment()
     ? builder.Configuration.GetConnectionString("LocalDefaultConnection")
-    : configuration["ConnectionStrings:ProdDefaultConnection"];
+    : builder.Configuration.GetConnectionString("ProdDefaultConnection");
 if (string.IsNullOrEmpty(connection))
     throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
