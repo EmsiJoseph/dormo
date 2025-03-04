@@ -95,6 +95,11 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddHttpsRedirection(options =>
+{
+    options.HttpsPort = 443; // Standard HTTPS port
+});
+
 // API Versioning
 builder.Services.AddApiVersioning(options =>
 {

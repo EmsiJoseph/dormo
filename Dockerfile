@@ -1,6 +1,5 @@
 # See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
-# Add these lines near the top of your Dockerfile
 ARG VITE_API_BASE_URL
 ARG API_VERSION
 ARG PROD_CONNECTION_STRING
