@@ -40,6 +40,7 @@ COPY . .
 WORKDIR "/src/dormo.client"
 RUN echo "VITE_API_VERSION=${VITE_API_VERSION}" > .env
 RUN echo "VITE_API_BASE_URL=${VITE_API_BASE_URL}" >> .env
+RUN npm install
 
 WORKDIR "/src/Dormo.Server"
 RUN dotnet build "./Dormo.Server.csproj" -c $BUILD_CONFIGURATION -o /app/build
