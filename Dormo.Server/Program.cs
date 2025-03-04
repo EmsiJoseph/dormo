@@ -95,11 +95,6 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 builder.Services.AddAuthorization();
 
-builder.Services.AddHttpsRedirection(options =>
-{
-    options.HttpsPort = 443; // Standard HTTPS port
-});
-
 // API Versioning
 builder.Services.AddApiVersioning(options =>
 {
@@ -134,7 +129,10 @@ else
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+if (!string.Equals(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"), "true", StringComparison.OrdinalIgnoreCase))
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseAuthentication();
 app.UseAuthorization();
