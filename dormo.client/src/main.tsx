@@ -15,7 +15,7 @@ import AuthModal from "@/core/presentation/components/auth/auth-modal";
 
 const routerOptions = {
   // Use explicit false in production
-  devtoolsEnabled: import.meta.env.VITE_NODE_ENV !== 'production' && import.meta.env.VITE_DEV !== false,
+  devtoolsEnabled: false,
 };
 
 const router = createRouter({ routeTree, ...routerOptions });
