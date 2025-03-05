@@ -3,6 +3,6 @@ using Dormo.Server.Data.Models;
 
 namespace Dormo.Server.Services.Interfaces;
 
-public interface IUserService : ICrudService<User, int, BaseFilter, UserDto, PaginatedDto<UserDto>>
+public interface IUserService : ICrudService<ApplicationUser, int, BaseFilter, UserDto, PaginatedDto<UserDto>>
 {
 }

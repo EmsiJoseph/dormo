@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Dormo.Server.Data.Models;
 
-public class User : IdentityUser
+public class ApplicationUser : IdentityUser
 {
     [MaxLength(50)] public string? FirstName { get; set; }
     [MaxLength(50)] public string? LastName { get; set; }

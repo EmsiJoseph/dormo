@@ -17,8 +17,8 @@ namespace Dormo.Tests;
 public class AuthControllerTests : IClassFixture<DormoFixture>
 {
     private readonly AuthController _controller;
-    private readonly UserManager<User> _userManager;
-    private readonly SignInManager<User> _signInManager;
+    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly ITestOutputHelper _output;
 
     public AuthControllerTests(DormoFixture fixture, ITestOutputHelper output)
@@ -47,10 +47,10 @@ public class AuthControllerTests : IClassFixture<DormoFixture>
 
         // Configure UserManager to simulate no existing user
         A.CallTo(() => _userManager.FindByEmailAsync(request.Email))!
-            .Returns(Task.FromResult<User>(null!));
+            .Returns(Task.FromResult<ApplicationUser>(null!));
 
         // Configure successful user creation
-        A.CallTo(() => _userManager.CreateAsync(A<User>._, request.Password))
+        A.CallTo(() => _userManager.CreateAsync(A<ApplicationUser>._, request.Password))
             .Returns(IdentityResult.Success);
 
         // Act
@@ -131,7 +131,7 @@ public class AuthControllerTests : IClassFixture<DormoFixture>
         };
 
         A.CallTo(() => _userManager.FindByEmailAsync(request.Email))
-            .Returns(new User { Email = request.Email, FirstName = request.FirstName, LastName = request.LastName });
+            .Returns(new ApplicationUser { Email = request.Email, FirstName = request.FirstName, LastName = request.LastName });
 
         // Act
         var exception = await Assert.ThrowsAsync<AppException>(
@@ -161,10 +161,10 @@ public class AuthControllerTests : IClassFixture<DormoFixture>
 
         // Configure UserManager to simulate no existing user
         A.CallTo(() => _userManager.FindByEmailAsync(request.Email))
-            .Returns(Task.FromResult<User>(null));
+            .Returns(Task.FromResult<ApplicationUser>(null));
 
         // Configure password validation failure
-        A.CallTo(() => _userManager.CreateAsync(A<User>._, request.Password))
+        A.CallTo(() => _userManager.CreateAsync(A<ApplicationUser>._, request.Password))
             .Returns(IdentityResult.Failed(new IdentityError { Description = "Password too weak" }));
 
         // Act
@@ -195,7 +195,7 @@ public class AuthControllerTests : IClassFixture<DormoFixture>
         };
 
         // Configure validation to fail
-        A.CallTo(() => _userManager.CreateAsync(A<User>._, request.Password))
+        A.CallTo(() => _userManager.CreateAsync(A<ApplicationUser>._, request.Password))
             .Throws(new ValidationException("First name cannot exceed 50 characters"));
 
         // Act
@@ -247,7 +247,7 @@ public class AuthControllerTests : IClassFixture<DormoFixture>
         };
 
         A.CallTo(() => _userManager.FindByEmailAsync(request.Email))
-            .Returns(new User { Email = request.Email, FirstName = "Juan", LastName = "Doe" });
+            .Returns(new ApplicationUser { Email = request.Email, FirstName = "Juan", LastName = "Doe" });
 
         // Act
         var result = await _controller.IsRegistered(request);
@@ -271,7 +271,7 @@ public class AuthControllerTests : IClassFixture<DormoFixture>
         };
 
         A.CallTo(() => _userManager.FindByEmailAsync(request.Email))!
-            .Returns(Task.FromResult<User>(null!));
+            .Returns(Task.FromResult<ApplicationUser>(null!));
 
         // Act
         var result = await _controller.IsRegistered(request);
@@ -314,7 +314,7 @@ public class AuthControllerTests : IClassFixture<DormoFixture>
             Password = "Password1*"
         };
 
-        var user = new User 
+        var user = new ApplicationUser 
         { 
             Email = request.Email,
             UserName = request.Email, // Important: UserName must be set

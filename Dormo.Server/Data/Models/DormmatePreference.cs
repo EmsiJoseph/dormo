@@ -11,7 +11,7 @@ public class DormmatePreference : BaseEntity<int>
 
     [ForeignKey(nameof(UserId))]
     [JsonIgnore]
-    public User? User { get; set; }
+    public ApplicationUser? User { get; set; }
 
     public virtual ICollection<Interest> Interests { get; set; } =
         new List<Interest>();

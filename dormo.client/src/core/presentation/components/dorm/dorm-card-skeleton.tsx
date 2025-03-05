@@ -1,9 +1,9 @@
 export function DormCardSkeleton() {
     return (
         <div className="w-full">
-            <div className="relative h-80 w-full">
+            <div className="relative w-full">
                 {/* Image skeleton - matching the exact dimensions and border radius */}
-                <div className="h-full w-full relative bg-gray-200 rounded-xl overflow-hidden">
+                <div className="h-full w-full relative aspect-square bg-gray-200 rounded-xl overflow-hidden">
                     {/* Verified Badge skeleton - matching position */}
                     <div className="absolute top-3 left-3 z-10">
                         <div className="h-6 w-20 bg-gray-300 rounded-full"></div>
@@ -55,9 +55,9 @@ export function DormCardSkeleton() {
     );
 }
 
-export function DormCardSkeletonGrid({count = 8}: { count?: number }) {
+export function DormCardSkeletonGrid({count = 10}: { count?: number }) {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-7">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 pb-10">
             {Array(count)
                 .fill(0)
                 .map((_, idx) => (

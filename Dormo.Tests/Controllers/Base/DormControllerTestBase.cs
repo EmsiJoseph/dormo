@@ -17,7 +17,7 @@ public abstract class DormControllerTestBase : IClassFixture<DormoFixture>
 {
     protected readonly Server.Controllers.DormController _controller;
     protected readonly IDormService _dormService;
-    protected readonly UserManager<User> _userManager;
+    protected readonly UserManager<ApplicationUser> _userManager;
     protected readonly ITestOutputHelper _output;
     protected const string TestUserId = "test-user-id";
     protected const string TestUserFirstName = "Test";
@@ -132,7 +132,7 @@ public abstract class DormControllerTestBase : IClassFixture<DormoFixture>
     protected void SetupSuccessfulUserLookup()
     {
         A.CallTo(() => _userManager.FindByIdAsync(TestUserId))
-            .Returns(new User { Id = TestUserId, FirstName = TestUserFirstName, LastName = TestUserLastName });
+            .Returns(new ApplicationUser { Id = TestUserId, FirstName = TestUserFirstName, LastName = TestUserLastName });
     }
 
     protected void SetupEmptyDormsList()

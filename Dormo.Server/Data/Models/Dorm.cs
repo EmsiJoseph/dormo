@@ -36,7 +36,7 @@ public class Dorm : BaseEntity<int>
 
     [ForeignKey(nameof(OwnerId))]
     [JsonIgnore]
-    public User? Owner { get; set; }
+    public ApplicationUser? Owner { get; set; }
 
     [Required(ErrorMessage = "Category ID is required.")]
     public int CategoryId { get; set; } // Foreign key to Category

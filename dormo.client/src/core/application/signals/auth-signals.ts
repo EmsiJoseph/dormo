@@ -1,22 +1,24 @@
-import {signal} from "@preact/signals";
+import { signal } from '@preact/signals';
 
+export type AuthStep = 'initial' | 'login' | 'register' | 'complete-profile';
+
+export const authStepSignal = signal<AuthStep>('initial');
+export const emailSignal = signal<string>('');
 export const isCalendarOpenSignal = signal<boolean>(false);
-export const emailSignal = signal<string>("");
-export const authStepSignal = signal<"initial" | "login" | "register" | "complete-profile">('initial');
-
-export const preferredNameSignal = signal<string>("");
-
 export const isSubmittingSignal = signal<boolean>(false);
 
-// Add new signal for Google user info
+export const preferredNameSignal = signal<string>('');
+
+// New signal to store Google user information
 export interface GoogleUserInfo {
   email: string;
   firstName: string;
   lastName: string;
-  profileImageUrl: string;
+  dob?: string;
+  isNewUser: boolean;
 }
 
 export const googleUserInfoSignal = signal<GoogleUserInfo | null>(null);
 
-export const isGoogleScriptLoaded = signal<boolean>(false);
+
 

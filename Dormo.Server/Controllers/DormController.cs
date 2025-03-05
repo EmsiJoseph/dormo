@@ -21,10 +21,10 @@ public class DormController : ControllerBase, IDormController
 {
     private readonly IDormService _dormService;
 
-    private readonly UserManager<User> _userManager;
+    private readonly UserManager<ApplicationUser> _userManager;
     // private readonly IDormMatchService _dormMatchService;
 
-    public DormController(IDormService dormService, UserManager<User> userManager)
+    public DormController(IDormService dormService, UserManager<ApplicationUser> userManager)
     {
         _dormService = dormService;
         _userManager = userManager;

@@ -12,6 +12,8 @@ public class AppException : Exception
         StatusCode = statusCode;
     }
 
+    public static AppException GenericError(string message)
+        => new(message, statusCode: 400);
     public static AppException NotFound(string entityName, object id)
         => new($"{entityName} with ID {id} was not found.", statusCode: 404);
 

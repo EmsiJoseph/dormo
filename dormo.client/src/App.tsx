@@ -3,7 +3,7 @@ import { useAppDispatch } from "./core/presentation/hooks/use-app-dispatch";
 import { checkAuthStatus } from "./core/application/store/auth/auth-slice";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
-
+import { BrowserRouter } from "react-router-dom";
 
 const router = createRouter({ routeTree });
 
@@ -13,7 +13,6 @@ declare module "@tanstack/react-router" {
   }
 }
 
-
 export default function App() {
   const dispatch = useAppDispatch();
 
@@ -21,5 +20,9 @@ export default function App() {
     dispatch(checkAuthStatus());
   }, [dispatch]);
 
-  return <RouterProvider router={router} />;
+  return (
+    <BrowserRouter>
+      <RouterProvider router={router} />
+    </BrowserRouter>
+  );
 }

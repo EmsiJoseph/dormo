@@ -11,7 +11,7 @@ public class Visit : BaseEntity<int>
 
     [ForeignKey(nameof(VisitorId))]
     [JsonIgnore]
-    public User? Visitor { get; set; }
+    public ApplicationUser? Visitor { get; set; }
 
     [Required(ErrorMessage = "Room ID is required.")]
     public int RoomId { get; set; }

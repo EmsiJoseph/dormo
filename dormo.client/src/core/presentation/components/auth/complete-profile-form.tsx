@@ -19,7 +19,7 @@ import {
 import {cn} from "@/lib/utils";
 import {format} from "date-fns";
 import {Calendar} from "@/core/presentation/components/ui/calendar";
-import {RegisterFormValues} from "@/core/domain/schemas/auth-schemas";
+import { RegisterFormValues} from "@/core/domain/schemas/auth-schemas";
 import {Checkbox} from "@/core/presentation/components/ui/checkbox";
 import {
     Dialog,
@@ -42,15 +42,17 @@ interface CompleteFormProps {
     handleBack: () => void;
     onSubmit: (data: RegisterFormValues) => Promise<void>;
     completeProfileForm: ReturnType<typeof useForm<RegisterFormValues>>;
-    setIsCalendarOpen?: (isOpen: boolean) => void;
+    isExternalAuth?: boolean;
 }
 
 export default function CompleteProfileForm({
-                                                handleBack,
-                                                onSubmit,
-                                                completeProfileForm,
-                                            }: CompleteFormProps) {
-    const handleSubmit = async (data: RegisterFormValues) => {
+    handleBack,
+    onSubmit,
+    completeProfileForm,
+    isExternalAuth = false,
+}: CompleteFormProps) {
+
+    const handleSubmit = async (data: RegisterFormValues ) => {
         isSubmittingSignal.value = true;
         try {
             await onSubmit(data);
@@ -66,6 +68,11 @@ export default function CompleteProfileForm({
     useEffect(() => {
         console.log(completeProfileForm.formState.errors);
     }, [completeProfileForm.formState.errors]);
+
+    useEffect(() => {
+        // Update the form's isExternalAuth value whenever the prop changes
+        completeProfileForm.setValue('isExternalAuth', isExternalAuth);
+    }, [isExternalAuth]);
 
     return (
         <Form {...completeProfileForm}>
@@ -291,6 +298,47 @@ export default function CompleteProfileForm({
                                 </FormItem>
                             )}
                         />
+
+                        {/* Only show password fields for regular registration */}
+                        {!isExternalAuth && (
+                            <>
+                                <FormField
+                                    control={completeProfileForm.control}
+                                    name="password"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Password</FormLabel>
+                                            <FormControl>
+                                                <FloatingLabelInput
+                                                    type="password"
+                                                    label="Create a password"
+                                                    {...field}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                <FormField
+                                    control={completeProfileForm.control}
+                                    name="confirmPassword"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Confirm password</FormLabel>
+                                            <FormControl>
+                                                <FloatingLabelInput
+                                                    type="password"
+                                                    label="Enter the same password"
+                                                    {...field}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </>
+                        )}
                     </div>
 
                     <div className="space-y-4">
@@ -304,7 +352,7 @@ export default function CompleteProfileForm({
                             size="lg"
                             isLoading={isSubmittingSignal.value}
                         >
-                            Agree and continue
+                            {isExternalAuth ? "Complete with Google" : "Agree and continue"}
                         </SubmitButton>
                     </div>
                 </div>

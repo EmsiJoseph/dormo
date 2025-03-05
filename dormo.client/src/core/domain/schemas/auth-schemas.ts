@@ -25,10 +25,9 @@ export const initialRegisterSchema = z.object({
     path: ["confirmPassword"],
 });
 
+// Single schema for both regular and Google auth registration
 export const registerSchema = z.object({
     email: z.string().email("Please enter a valid email address"),
-    password: passwordSchema,
-    confirmPassword: z.string(),
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
     preferredFirstName: z.string().optional(),
@@ -44,10 +43,28 @@ export const registerSchema = z.object({
     }, {
         message: "You must be 18 years or older",
     }),
+    // Make password and confirmPassword optional
+    password: passwordSchema.optional(),
+    confirmPassword: z.string().optional(),
     contactInfo: z.string().optional(),
     longitude: z.number().optional(),
     latitude: z.number().optional(),
     emailSubscription: z.boolean().default(false),
+    // Optional flag for external auth
+    isExternalAuth: z.boolean().optional(),
+})
+// Add conditional validation for passwords
+.refine((data) => {
+    // If external auth, skip password validation
+    if (data.isExternalAuth) return true;
+    
+    // If not external auth, both password fields are required
+    if (!data.password || !data.confirmPassword) return false;
+    
+    return data.password === data.confirmPassword;
+}, {
+    message: "Passwords don't match or are required",
+    path: ["confirmPassword"]
 });
 
 export type EmailFormValues = z.infer<typeof emailSchema>;

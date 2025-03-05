@@ -9,8 +9,8 @@ namespace Dormo.Tests.Fixtures;
 
 public class DormoFixture : IDisposable
 {
-    public UserManager<User> UserManager { get; }
-    public SignInManager<User> SignInManager { get; }
+    public UserManager<ApplicationUser> UserManager { get; }
+    public SignInManager<ApplicationUser> SignInManager { get; }
     public IDormService DormService { get; }
     public ApplicationDbContext DbContext { get; }
 
@@ -30,8 +30,8 @@ public class DormoFixture : IDisposable
 
     public DormoFixture()
     {
-        UserManager = A.Fake<UserManager<User>>();
-        SignInManager = A.Fake<SignInManager<User>>();
+        UserManager = A.Fake<UserManager<ApplicationUser>>();
+        SignInManager = A.Fake<SignInManager<ApplicationUser>>();
         DormService = A.Fake<IDormService>();
         // UserService = A.Fake<IUserService>();
         // BookingService = A.Fake<IBookingService>();

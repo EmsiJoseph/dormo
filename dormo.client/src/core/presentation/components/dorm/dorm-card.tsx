@@ -247,7 +247,7 @@ export function DormCard({
                         <p className="text-sm text-gray-700">starts at</p>
                         <span>
                     <span className="font-semibold text-gray-900">
-                      ₱{dorm.minPrice}
+                      ₱{dorm.minPrice.toLocaleString('en-US')}
                     </span>{" "}
                             month
                   </span>

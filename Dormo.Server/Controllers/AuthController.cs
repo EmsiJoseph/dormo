@@ -15,10 +15,10 @@ namespace Dormo.Server.Controllers;
 [Route("api/v1.0/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly UserManager<User> _userManager;
-    private readonly SignInManager<User> _signInManager;
+    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly SignInManager<ApplicationUser> _signInManager;
 
-    public AuthController(UserManager<User> userManager, SignInManager<User> signInManager)
+    public AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -33,6 +33,24 @@ public class AuthController : ControllerBase
     {
         public bool IsRegistered { get; set; }
         public required string Email { get; set; }
+    }
+
+    public class GoogleRegisterDto
+    {
+        public string Email { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string PreferredFirstName { get; set; }
+        public string Dob { get; set; }
+        public string? ContactInfo { get; set; }
+        public bool EmailSubscription { get; set; }
+        public ExternalLoginDto ExternalLogin { get; set; }
+    }
+
+    public class ExternalLoginDto
+    {
+        public string Provider { get; set; }
+        public string Email { get; set; }
     }
 
     [HttpPost("")]
@@ -77,7 +95,7 @@ public class AuthController : ControllerBase
         if (existingUser != null)
             throw AppException.ValidationError("Email is already registered", "Email");
 
-        var newUser = new User
+        var newUser = new ApplicationUser
         {
             UserName = request.Email,
             PreferredFirstName = request.PreferredFirstName ?? "",
@@ -116,6 +134,51 @@ public class AuthController : ControllerBase
         return BadRequest(result.Errors);
     }
 
+    [HttpPost("register-google")]
+    public async Task<IActionResult> RegisterWithGoogle(GoogleRegisterDto model)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+        
+        // Check if user already exists
+        var existingUser = await _userManager.FindByEmailAsync(model.Email);
+        if (existingUser != null)
+            return BadRequest(new { message = "User with this email already exists" });
+        
+        // Parse date of birth
+        if (!DateOnly.TryParse(model.Dob, out var dob))
+            return BadRequest(new { message = "Invalid date of birth format" });
+
+        // Create user without password since it's Google auth
+        var user = new ApplicationUser
+        {
+            UserName = model.Email,
+            Email = model.Email,
+            FirstName = model.FirstName,
+            LastName = model.LastName,
+            PreferredFirstName = model.PreferredFirstName,
+            Dob = dob,
+            ContactInfo = model.ContactInfo,
+            EmailSubscription = model.EmailSubscription,
+            CreatedAt = DateTime.UtcNow
+        };
+        
+        var result = await _userManager.CreateAsync(user);
+        if (!result.Succeeded)
+            return BadRequest(result.Errors);
+        
+        // Create external login info
+        var info = new UserLoginInfo(model.ExternalLogin.Provider, user.Id, model.Email);
+        var addLoginResult = await _userManager.AddLoginAsync(user, info);
+        if (!addLoginResult.Succeeded)
+            return BadRequest(addLoginResult.Errors);
+        
+        // Sign in the user
+        await _signInManager.SignInAsync(user, isPersistent: false);
+        
+        return Ok(new { message = "Registration successful" });
+    }
+
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginRequest request)
     {
@@ -144,8 +207,8 @@ public class AuthController : ControllerBase
         throw AppException.Unauthorized("Invalid login attempt");
     }
 
-    [Authorize]
     [HttpPost("logout")]
+    [AllowAnonymous]
     public async Task<IActionResult> Logout()
     {
         await _signInManager.SignOutAsync();

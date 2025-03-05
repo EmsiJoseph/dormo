@@ -26,7 +26,7 @@ public class DormBasicOperationsTests : DormControllerTestBase
         var dto = CreateValidDormDto();
 
         A.CallTo(() => _userManager.FindByIdAsync(TestUserId))
-            .Returns(new User { Id = TestUserId, FirstName = TestUserFirstName, LastName = TestUserLastName });
+            .Returns(new ApplicationUser { Id = TestUserId, FirstName = TestUserFirstName, LastName = TestUserLastName });
 
         // Update this to return a PaginatedDto instead of a List
         A.CallTo(() => _dormService.GetAllAsync(A<DormFilter>._))
@@ -55,7 +55,7 @@ public class DormBasicOperationsTests : DormControllerTestBase
             .Select(i => new DormDto { Id = i }).ToList();
 
         A.CallTo(() => _userManager.FindByIdAsync(TestUserId))
-            .Returns(new User { Id = TestUserId, FirstName = TestUserFirstName, LastName = TestUserLastName });
+            .Returns(new ApplicationUser { Id = TestUserId, FirstName = TestUserFirstName, LastName = TestUserLastName });
 
         // Update this to return a PaginatedDto
         A.CallTo(() => _dormService.GetAllAsync(A<DormFilter>._))
@@ -75,7 +75,7 @@ public class DormBasicOperationsTests : DormControllerTestBase
         var existingDorms = new List<DormDto> { new() { Address = "Existing Address" } };
 
         A.CallTo(() => _userManager.FindByIdAsync(TestUserId))
-            .Returns(new User { Id = TestUserId, FirstName = TestUserFirstName, LastName = TestUserLastName });
+            .Returns(new ApplicationUser { Id = TestUserId, FirstName = TestUserFirstName, LastName = TestUserLastName });
 
         // Update this to return a PaginatedDto
         A.CallTo(() => _dormService.GetAllAsync(A<DormFilter>._))

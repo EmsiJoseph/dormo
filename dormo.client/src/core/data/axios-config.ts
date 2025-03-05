@@ -1,22 +1,25 @@
-import axios, { AxiosError, AxiosResponse } from "axios";
+import axios from 'axios';
+import { store } from '@/core/application/store/store';
+import { clearAuthState } from '@/core/application/store/auth/auth-slice';
 
-const API_VERSION = import.meta.env.VITE_API_VERSION;
-
-const AxiosConfig = axios.create({
-    baseURL: API_VERSION,
-    timeout: 5000,
-    withCredentials: true
+const axiosInstance = axios.create({
+  baseURL: `${import.meta.env.VITE_API_VERSION || '/api/v1.0'}`,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  withCredentials: true, // Important for sending/receiving cookies
 });
 
-AxiosConfig.interceptors.response.use(
-    (response: AxiosResponse): AxiosResponse => response,
-    (error: AxiosError): Promise<never> => {
-        if (error.response?.status === 401) {
-            // window.location.href = '/';
-            // TODO: Pop up a modal to inform the user that they have been logged out
-        }
-        return Promise.reject(error);
+// Add a response interceptor to handle auth errors
+axiosInstance.interceptors.response.use(
+  response => response, 
+  error => {
+    // If unauthorized, clear auth state
+    if (error.response && error.response.status === 401) {
+      store.dispatch(clearAuthState());
     }
+    return Promise.reject(error);
+  }
 );
 
-export { AxiosConfig };
+export const AxiosConfig = axiosInstance;

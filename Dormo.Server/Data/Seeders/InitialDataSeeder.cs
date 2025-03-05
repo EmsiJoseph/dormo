@@ -313,14 +313,14 @@ public static class InitialDataSeeder
     private static List<string> SeedUsers(ModelBuilder modelBuilder, string adminRoleId, string ownerRoleId,
         string memberRoleId, string tenantRoleId)
     {
-        var hasher = new PasswordHasher<User>();
+        var hasher = new PasswordHasher<ApplicationUser>();
         var ownerIds = new List<string>();
-        var users = new List<User>();
+        var users = new List<ApplicationUser>();
         var userRoles = new List<IdentityUserRole<string>>();
 
         // Owner 1 - Property Management Company
         var owner1Id = "8e445865-a24d-4543-a6c6-9443d048cdb9";
-        var owner1 = new User
+        var owner1 = new ApplicationUser
         {
             Id = owner1Id,
             UserName = "pmcrealty@example.com",
@@ -340,7 +340,7 @@ public static class InitialDataSeeder
 
         // Owner 2 - Individual Owner
         var owner2Id = "8e445865-a24d-4543-a6c6-9443d048cdb8";
-        var owner2 = new User
+        var owner2 = new ApplicationUser
         {
             Id = owner2Id,
             UserName = "maria.santos@example.com",
@@ -360,7 +360,7 @@ public static class InitialDataSeeder
 
         // Owner 3 - Real Estate Developer
         var owner3Id = "8e445865-a24d-4543-a6c6-9443d048cdb7";
-        var owner3 = new User
+        var owner3 = new ApplicationUser
         {
             Id = owner3Id,
             UserName = "megadevelopers@example.com",
@@ -380,7 +380,7 @@ public static class InitialDataSeeder
 
         // Owner 4 - Small Property Owner
         var owner4Id = "8e445865-a24d-4543-a6c6-9443d048cdb6";
-        var owner4 = new User
+        var owner4 = new ApplicationUser
         {
             Id = owner4Id,
             UserName = "antonio.reyes@example.com",
@@ -400,7 +400,7 @@ public static class InitialDataSeeder
 
         // Owner 5 - University Housing Department
         var owner5Id = "8e445865-a24d-4543-a6c6-9443d048cdb5";
-        var owner5 = new User
+        var owner5 = new ApplicationUser
         {
             Id = owner5Id,
             UserName = "housing@university.edu",
@@ -420,7 +420,7 @@ public static class InitialDataSeeder
 
         // Seed Admin User
         var adminId = "8e445865-a24d-4543-a6c6-9443d048cdb0";
-        var admin = new User
+        var admin = new ApplicationUser
         {
             Id = adminId,
             UserName = "admin@dormo.com",
@@ -438,7 +438,7 @@ public static class InitialDataSeeder
         userRoles.Add(new IdentityUserRole<string> { UserId = adminId, RoleId = adminRoleId });
 
         // Add users to database
-        modelBuilder.Entity<User>().HasData(users);
+        modelBuilder.Entity<ApplicationUser>().HasData(users);
 
         // Add user roles to database
         modelBuilder.Entity<IdentityUserRole<string>>().HasData(userRoles);

@@ -39,7 +39,7 @@ function IndexLazy() {
     };
 
     if (isLoading && DormFilterSignal.value.page === 1) {
-        return <DormCardSkeletonGrid count={8}/>;
+        return <DormCardSkeletonGrid count={10}/>;
     }
 
     if (isError) {
@@ -57,6 +57,7 @@ function IndexLazy() {
                 <div className="text-center py-8">No dorms found</div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 pb-10">
+                    {/*TODO: Load the images of the cards that are in the viewport*/}
                     {AllDormsSignal.value.map((dorm: DormListing) => (
                         <DormCard
                             key={dorm.id}
@@ -69,7 +70,7 @@ function IndexLazy() {
 
             {/* Load More Section */}
             {isLoading && page > 1 ? (
-                <DormCardSkeletonGrid count={4}/>
+                <DormCardSkeletonGrid count={5}/>
             ) : (
                 hasNext && (
                     <div className="flex flex-col items-center gap-2 pb-4">

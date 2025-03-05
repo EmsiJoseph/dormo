@@ -1,9 +1,4 @@
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from "../ui/dialog";
+import {Dialog, DialogContent, DialogHeader, DialogTitle,} from "../ui/dialog";
 import {useSelector} from "react-redux";
 import {RootState} from "@/core/application/store/store";
 import {useAppDispatch} from "@/core/presentation/hooks/use-app-dispatch";
@@ -29,18 +24,80 @@ import RegisterForm from "./register-form";
 import {useSignalEffect} from "@preact/signals";
 import CompleteProfileForm from "./complete-profile-form";
 import {
-    emailSignal,
     authStepSignal,
+    emailSignal,
+    googleUserInfoSignal,
     isCalendarOpenSignal,
-    isSubmittingSignal,
-    googleUserInfoSignal
+    isSubmittingSignal
 } from "../../../application/signals/auth-signals";
-import {format} from "date-fns";
+import {format, parse} from "date-fns";
 import {checkAuthStatus} from "@/core/application/store/auth/auth-slice";
+import {useEffect} from "preact/hooks";
+import {checkGoogleAuthData} from "@/core/presentation/handlers/url-param-handler";
+import {AuthStorage} from "@/core/data/storage/auth-storage";
 
 export default function AuthModal() {
     const dispatch = useAppDispatch();
-    const {isOpen} = useSelector((state: RootState) => state.authModal);
+    const {isOpen, initialStep} = useSelector((state: RootState) => state.authModal);
+
+    // Apply initial step if provided by the store
+    useEffect(() => {
+        if (isOpen && initialStep) {
+            authStepSignal.value = initialStep;
+
+            // Then check for Google user info in storage
+            const storedData = AuthStorage.getGoogleAuthData();
+            if (storedData) {
+                // Populate form with Google data
+                emailSignal.value = storedData.email;
+                googleUserInfoSignal.value = storedData;
+
+                if (initialStep === "complete-profile") {
+                    const dobDate = storedData.dob ?
+                        parse(storedData.dob, 'yyyy-MM-dd', new Date()) :
+                        undefined;
+
+                    completeProfileForm.reset({
+                        email: storedData.email,
+                        firstName: storedData.firstName || "",
+                        lastName: storedData.lastName || "",
+                        preferredFirstName: storedData.firstName || "",
+                        dob: dobDate,
+                        emailSubscription: false,
+                    });
+                }
+            }
+        }
+    }, [isOpen, initialStep]);
+
+    // Check for Google auth data on component mount
+    useEffect(() => {
+        const checkAuth = async () => {
+            const googleAuthData = await checkGoogleAuthData();
+            if (googleAuthData && googleAuthData.isNewUser) {
+                dispatch({type: "authModal/openAuthModal"});
+                emailSignal.value = googleAuthData.email;
+                authStepSignal.value = "complete-profile";
+
+                // Populate the complete profile form with Google data
+                const dobDate = googleAuthData.dob ?
+                    parse(googleAuthData.dob, 'yyyy-MM-dd', new Date()) :
+                    undefined;
+
+                completeProfileForm.reset({
+                    email: googleAuthData.email,
+                    firstName: googleAuthData.firstName || "",
+                    lastName: googleAuthData.lastName || "",
+                    preferredFirstName: googleAuthData.firstName || "",
+                    dob: dobDate,
+                    emailSubscription: false,
+                    isExternalAuth: true, // Mark as external auth
+                });
+            }
+        };
+
+        checkAuth();
+    }, []);
 
     const emailForm = useForm<EmailFormValues>({
         resolver: zodResolver(emailSchema),
@@ -61,32 +118,16 @@ export default function AuthModal() {
         resolver: zodResolver(registerSchema),
         defaultValues: {
             email: emailSignal.value,
+            isExternalAuth: false, // Default to regular auth
         },
     });
+
 
     // Reset forms when email changes
     useSignalEffect(() => {
         if (emailSignal.value) {
             loginForm.reset({email: emailSignal.value});
             initialRegisterForm.reset({email: emailSignal.value});
-        }
-    });
-
-    useSignalEffect(() => {
-        if (authStepSignal.value === "complete-profile" && googleUserInfoSignal.value) {
-            const userInfo = googleUserInfoSignal.value;
-
-            // Pre-fill form with Google data
-            completeProfileForm.reset({
-                ...completeProfileForm.getValues(),
-                email: userInfo.email,
-                firstName: userInfo.firstName,
-                lastName: userInfo.lastName,
-                preferredFirstName: userInfo.firstName,
-            });
-
-            // Clear the Google user info signal
-            googleUserInfoSignal.value = null;
         }
     });
 
@@ -115,9 +156,6 @@ export default function AuthModal() {
 
             isSubmittingSignal.value = false;
             dispatch(closeAuthModal());
-
-            // Alternative: force page reload
-            // window.location.reload();
         } catch (error) {
             isSubmittingSignal.value = false;
             console.error("Login failed:", error);
@@ -132,6 +170,7 @@ export default function AuthModal() {
                 email: data.email,
                 password: data.password,
                 confirmPassword: data.confirmPassword,
+                isExternalAuth: false, // This is regular registration
             });
             authStepSignal.value = "complete-profile";
         } catch (error) {
@@ -142,23 +181,39 @@ export default function AuthModal() {
 
     const onCompleteProfileSubmit = async (data: RegisterFormValues) => {
         try {
+            // Format the date for both paths
             const formattedData = {
                 ...data,
-                contactInfo: data.contactInfo || undefined,
-                dob: format(data.dob, "yyyy-MM-dd")
+                dob: format(data.dob, "yyyy-MM-dd"),
+                contactInfo: data.contactInfo || undefined
             };
 
-            console.log("Formatted data:", formattedData);
-            await AuthApi.register(formattedData);
+            // Check if we're dealing with Google auth
+            if (data.isExternalAuth) {
+                // For Google auth registration
+                const googleData = {
+                    ...formattedData,
+                    // Remove password fields
+                    password: undefined,
+                    confirmPassword: undefined,
+                    // Add external login info
+                    externalLogin: {
+                        provider: "Google",
+                        email: data.email
+                    }
+                };
+
+                await AuthApi.registerWithGoogle(googleData);
+            } else {
+                // For regular registration
+                await AuthApi.register(formattedData);
+            }
 
             // Update auth store with current user info after registration
             await dispatch(checkAuthStatus()).unwrap();
 
             dispatch(closeAuthModal());
             toast.success("Registration successful");
-
-            // Alternative: force page reload
-            // window.location.reload();
         } catch (error) {
             console.error("Registration failed:", error);
             toast.error("Failed to complete registration");
@@ -171,6 +226,7 @@ export default function AuthModal() {
         loginForm.reset();
         initialRegisterForm.reset();
         completeProfileForm.reset();
+        googleUserInfoSignal.value = null;
     };
 
     // Handle dialog close with calendar awareness
@@ -212,8 +268,15 @@ export default function AuthModal() {
             dob: undefined,
             contactInfo: "",
             emailSubscription: false,
+            isExternalAuth: false,
         });
+
+        // Clear session storage
+        AuthStorage.clearGoogleAuthData();
     };
+
+    const isGoogleAuth = !!googleUserInfoSignal.value;
+    const formToUse = isGoogleAuth ? completeProfileForm : completeProfileForm;
 
     const renderForm = () => {
         switch (authStepSignal.value) {
@@ -234,11 +297,23 @@ export default function AuthModal() {
                     />
                 );
             case "complete-profile":
+
+
                 return (
                     <CompleteProfileForm
-                        handleBack={() => (authStepSignal.value = "register")}
+                        handleBack={() => {
+                            // If coming from Google auth, go back to initial screen
+                            if (isGoogleAuth) {
+                                authStepSignal.value = "initial";
+                                googleUserInfoSignal.value = null;
+                            } else {
+                                // Otherwise, go back to register screen
+                                authStepSignal.value = "register";
+                            }
+                        }}
                         onSubmit={onCompleteProfileSubmit}
-                        completeProfileForm={completeProfileForm}
+                        completeProfileForm={formToUse}
+                        isExternalAuth={isGoogleAuth} // Pass this prop to hide password fields
                     />
                 );
             default:

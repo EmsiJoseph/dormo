@@ -11,7 +11,7 @@ public class Booking : BaseEntity<int>
 
     [ForeignKey(nameof(TenantId))]
     [JsonIgnore]
-    public User? Tenant { get; set; }
+    public ApplicationUser? Tenant { get; set; }
 
     [Required(ErrorMessage = "Room ID is required.")]
     public int RoomId { get; set; }

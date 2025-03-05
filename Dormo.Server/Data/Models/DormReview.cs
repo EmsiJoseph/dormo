@@ -18,7 +18,7 @@ public class DormReview : BaseEntity<int>
 
     [ForeignKey(nameof(TenantId))]
     [JsonIgnore]
-    public User? Tenant { get; set; }
+    public ApplicationUser? Tenant { get; set; }
 
     [Range(0, 5, ErrorMessage = "Rating must be between 0 and 5.")]
     [Column(TypeName = "decimal(2,1)")]
