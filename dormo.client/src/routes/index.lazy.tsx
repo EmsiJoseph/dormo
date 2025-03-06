@@ -13,7 +13,7 @@ export const Route = createLazyFileRoute("/")({
 });
 
 function IndexLazy() {
-    const {data, isLoading, isError, error} = useDormListings(DormFilterSignal.value);
+    const {data, isPending, isError, error} = useDormListings(DormFilterSignal.value);
 
     const dormListings = data?.items || [];
     const page = data?.page || 1;
@@ -38,7 +38,7 @@ function IndexLazy() {
         DormFilterSignal.value = {...DormFilterSignal.value, page: nextPage};
     };
 
-    if (isLoading && DormFilterSignal.value.page === 1) {
+    if (isPending && DormFilterSignal.value.page === 1) {
         return <DormCardSkeletonGrid count={10}/>;
     }
 
@@ -69,7 +69,7 @@ function IndexLazy() {
             )}
 
             {/* Load More Section */}
-            {isLoading && page > 1 ? (
+            {isPending && page > 1 ? (
                 <DormCardSkeletonGrid count={5}/>
             ) : (
                 hasNext && (
