@@ -13,18 +13,16 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
     }
 
-    public DbSet<Amenity> Amenities { get; set; }
-    public DbSet<Booking> Bookings { get; set; } // Assuming Booking is renamed from DormBooking
+    public DbSet<Booking> Bookings { get; set; }
     public DbSet<Category> Categories { get; set; }
     public DbSet<Dorm> Dorms { get; set; }
-    public DbSet<DormAmenity> DormAmenities { get; set; }
     public DbSet<DormmatePreference> DormmatePreferences { get; set; }
     public DbSet<DormmatePreferenceHabit> DormmatePreferenceHabits { get; set; }
     public DbSet<DormmatePreferenceInterest> DormmatePreferenceInterests { get; set; }
     public DbSet<DormReview> DormReviews { get; set; }
     public DbSet<DormTag> DormTags { get; set; }
     public DbSet<Habit> Habits { get; set; }
-    public DbSet<Image> Images { get; set; }
+    public DbSet<DormImage> Images { get; set; }
     public DbSet<Interest> Interests { get; set; }
     public DbSet<Room> Rooms { get; set; }
     public DbSet<Tag> Tags { get; set; }
@@ -33,7 +31,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-
+        
         // Dorm -> User (Owner) relationship
         builder.Entity<Dorm>()
             .HasOne(d => d.Owner)
@@ -86,7 +84,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         // DormReview -> Dorm relationship
         builder.Entity<DormReview>()
             .HasOne(dr => dr.Dorm)
-            .WithMany()
+            .WithMany(d => d.Reviews)  // Make sure this navigation property is configured
             .HasForeignKey(dr => dr.DormId)
             .OnDelete(DeleteBehavior.Cascade);
 
@@ -158,22 +156,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<DormTag>()
             .HasOne(dt => dt.Tag)
             .WithMany(t => t.DormTags)
-            .HasForeignKey(dt => dt.TagId);
+            .HasForeignKey(dt => dt.TagId)
+            .OnDelete(DeleteBehavior.Restrict);
         
-        // Dorm <-> Amenity (many-to-many)
-        builder.Entity<DormAmenity>()
-            .HasKey(da => da.Id);
-            
-        builder.Entity<DormAmenity>()
-            .HasOne(da => da.Dorm)
-            .WithMany(d => d.DormAmenities)
-            .HasForeignKey(da => da.DormId);
-            
-        builder.Entity<DormAmenity>()
-            .HasOne(da => da.Amenity)
-            .WithMany(a => a.DormAmenities)
-            .HasForeignKey(da => da.AmenityId);
-
         // Seeders
         builder.Seed();
     }
@@ -185,5 +170,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         // Suppress the warning about model changes
         optionsBuilder.ConfigureWarnings(warnings =>
             warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
+        
     }
 }

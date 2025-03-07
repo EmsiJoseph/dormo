@@ -18,12 +18,12 @@ using Scalar.AspNetCore;
 var builder = WebApplication.CreateBuilder(args);
 
 // Setup Configuration
-var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+var environmentName = builder.Environment.EnvironmentName;
 var configuration = new ConfigurationBuilder()
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", false)
     .AddJsonFile($"appsettings.{environmentName}.json", true)
-    .AddUserSecrets<Program>() // Add this line to load user secrets
+    .AddUserSecrets<Program>()
     .AddEnvironmentVariables()
     .Build();
 

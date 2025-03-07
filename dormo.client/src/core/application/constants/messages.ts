@@ -1,5 +1,5 @@
 import { BusinessRules } from './business-rules.ts';
-import { formatCurrency } from '@/lib/utils/currency.ts';
+import {formatCurrency} from "@/lib/utils/formatters.ts";
 
 export const SystemMessages = {
     // Success messages

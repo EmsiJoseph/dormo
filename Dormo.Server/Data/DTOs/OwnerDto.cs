@@ -1,6 +1,4 @@
-﻿using Dormo.Server.Constants;
-
-namespace Dormo.Server.Data.DTOs;
+﻿namespace Dormo.Server.Data.DTOs;
 
 public class OwnerDto
 {
@@ -19,4 +17,6 @@ public class OwnerDto
     public bool IsVerified { get; set; }
 
     public string? ProfileImageUrl { get; set; }
+    
+    public string JoinedAt { get; set; } = null!;
 }

@@ -15,6 +15,9 @@ public class Tag : BaseEntity<int>
 
     [Column(TypeName = "nvarchar(max)")]
     public string? Icon { get; set; } = string.Empty;
+    
+    [MaxLength(50)]
+    public string Type { get; set; } = TagType.Tag;
 
     // Direct navigation to join table
     public virtual ICollection<DormTag> DormTags { get; set; } = new List<DormTag>();
@@ -22,4 +25,11 @@ public class Tag : BaseEntity<int>
     // For convenience (not used in queries)
     [NotMapped]
     public virtual ICollection<Dorm> Dorms => DormTags.Select(dt => dt.Dorm!).ToList();
+}
+
+public class TagType
+{
+    public const string Amenity = "Amenity";
+    public const string Security = "Security";
+    public const string Tag = "Tag";
 }

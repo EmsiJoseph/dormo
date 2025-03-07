@@ -19,7 +19,7 @@ export default function RootLayout() {
                 after:shadow-[0_1px_3px_0_rgba(0,0,0,0.1)]
                 md:after:shadow-none
                 after:pointer-events-none"/>
-            <main className="mx-6 sm:mx-10 md:mx-15 lg:mx-20 py-4">
+            <main className="mx-6 sm:mx-10 md:mx-15 lg:mx-20 py-8">
                 <Outlet/>
             </main>
         </div>

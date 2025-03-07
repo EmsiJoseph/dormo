@@ -40,8 +40,9 @@ public class DormController : ControllerBase, IDormController
         return Ok(dorms);
     }
 
-    [OutputCache(Duration = 60, VaryByQueryKeys = ["DormsCache"])]
+    [OutputCache(Duration = 60, VaryByQueryKeys = ["id"])]
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetByIdAsync(int id)
     {
         var dorm = await _dormService.GetByIdAsync(id);

@@ -14,7 +14,7 @@ public class DormListingDto
     public int AvailableRooms { get; set; }
     public decimal Rating { get; set; }
 
-    public ImageRequest[]? Images { get; set; }
+    public List<ImageRequest> Images { get; set; } = new();
 
     public string CategoryName { get; set; } = string.Empty;
 }

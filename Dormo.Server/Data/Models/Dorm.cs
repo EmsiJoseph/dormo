@@ -58,23 +58,25 @@ public class Dorm : BaseEntity<int>
     public decimal Longitude { get; set; }
 
     public bool IsAvailable { get; set; } = true;
+    
+    [Required]
+    [Range(0.01, 100000.00)]
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal SecurityDeposit { get; set; }
 
     // Relationships
 
     // One-to-Many relationship
-    public virtual ICollection<Image> Images { get; set; } = new List<Image>();
+    public virtual ICollection<DormImage> Images { get; set; } = new List<DormImage>();
+    public virtual ICollection<DormReview> Reviews { get; set; } = new List<DormReview>();
 
     // Many-to-Many relationships - Simplified approach
     public virtual ICollection<DormTag> DormTags { get; set; } = new List<DormTag>();
-    public virtual ICollection<DormAmenity> DormAmenities { get; set; } = new List<DormAmenity>();
-
+  
     // Direct navigation collections for better querying
     [NotMapped]
     public virtual ICollection<Tag> Tags => DormTags.Select(dt => dt.Tag!).ToList();
-
-    [NotMapped]
-    public virtual ICollection<Amenity> Amenities => DormAmenities.Select(da => da.Amenity!).ToList();
-
+    
     public virtual ICollection<Room> Rooms { get; set; } = new List<Room>();
 
     [NotMapped] public decimal MinPrice => Rooms?.Any() == true ? Rooms.Min(r => r.PricePerMonth) : 0;

@@ -9,8 +9,11 @@ using Xunit.Abstractions;
 using System.Text.Json;
 using Dormo.Tests.Helpers;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
+using Dormo.Server.Constants;
 using Dormo.Server.Data.Requests;
 using Dormo.Server.Exceptions;
+using Microsoft.AspNetCore.Http;
 
 namespace Dormo.Tests;
 
@@ -51,6 +54,10 @@ public class AuthControllerTests : IClassFixture<DormoFixture>
 
         // Configure successful user creation
         A.CallTo(() => _userManager.CreateAsync(A<ApplicationUser>._, request.Password))
+            .Returns(IdentityResult.Success);
+
+        // Configure succesful role assignment
+        A.CallTo(() => _userManager.AddToRoleAsync(A<ApplicationUser>._, RolesConstants.Tenant))
             .Returns(IdentityResult.Success);
 
         // Act
@@ -131,7 +138,8 @@ public class AuthControllerTests : IClassFixture<DormoFixture>
         };
 
         A.CallTo(() => _userManager.FindByEmailAsync(request.Email))
-            .Returns(new ApplicationUser { Email = request.Email, FirstName = request.FirstName, LastName = request.LastName });
+            .Returns(new ApplicationUser
+                { Email = request.Email, FirstName = request.FirstName, LastName = request.LastName });
 
         // Act
         var exception = await Assert.ThrowsAsync<AppException>(
@@ -164,16 +172,17 @@ public class AuthControllerTests : IClassFixture<DormoFixture>
             .Returns(Task.FromResult<ApplicationUser>(null));
 
         // Configure password validation failure
+        var errors = new List<IdentityError> { new() { Description = "Password too weak" } };
         A.CallTo(() => _userManager.CreateAsync(A<ApplicationUser>._, request.Password))
-            .Returns(IdentityResult.Failed(new IdentityError { Description = "Password too weak" }));
+            .Returns(IdentityResult.Failed(errors.ToArray()));
 
         // Act
         var result = await _controller.Register(request);
 
         // Assert
         var badRequest = Assert.IsType<BadRequestObjectResult>(result);
-        var errors = Assert.IsAssignableFrom<IEnumerable<IdentityError>>(badRequest.Value);
-        var error = Assert.Single(errors);
+        var returnedErrors = Assert.IsAssignableFrom<IEnumerable<IdentityError>>(badRequest.Value);
+        var error = Assert.Single(returnedErrors);
         Assert.Equal("Password too weak", error.Description);
         _output.WriteLine($"Registration failed with error: {error.Description}");
     }
@@ -194,9 +203,19 @@ public class AuthControllerTests : IClassFixture<DormoFixture>
             Dob = DateOnly.FromDateTime(DateTime.Now.AddYears(-18))
         };
 
-        // Configure validation to fail
-        A.CallTo(() => _userManager.CreateAsync(A<ApplicationUser>._, request.Password))
-            .Throws(new ValidationException("First name cannot exceed 50 characters"));
+        // Configure UserManager to simulate no existing user
+        A.CallTo(() => _userManager.FindByEmailAsync(request.Email))
+            .Returns(Task.FromResult<ApplicationUser>(null!));
+
+        // Configure model validation to fail
+        var newUser = new ApplicationUser
+        {
+            UserName = request.Email,
+            Email = request.Email,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            Dob = request.Dob ?? default
+        };
 
         // Act
         var result = await _controller.Register(request);
@@ -314,10 +333,10 @@ public class AuthControllerTests : IClassFixture<DormoFixture>
             Password = "Password1*"
         };
 
-        var user = new ApplicationUser 
-        { 
+        var user = new ApplicationUser
+        {
             Email = request.Email,
-            UserName = request.Email, // Important: UserName must be set
+            UserName = request.Email,
             EmailConfirmed = true
         };
 
@@ -328,11 +347,23 @@ public class AuthControllerTests : IClassFixture<DormoFixture>
             .Returns(Task.FromResult(true));
 
         A.CallTo(() => _signInManager.PasswordSignInAsync(
-                user, request.Password, false, false))
+                user.UserName, request.Password, false, false))
             .Returns(Task.FromResult(Microsoft.AspNetCore.Identity.SignInResult.Success));
 
+        // Create a new controller instance so we can set up its HttpContext properly
+        var controller = new AuthController(_userManager, _signInManager);
+
+        // Set up explicitly non-authenticated identity
+        var httpContext = new DefaultHttpContext();
+        httpContext.User = new ClaimsPrincipal(new ClaimsIdentity()); // Empty identity = not authenticated
+
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = httpContext
+        };
+
         // Act
-        var result = await _controller.Login(request);
+        var result = await controller.Login(request);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -353,9 +384,17 @@ public class AuthControllerTests : IClassFixture<DormoFixture>
             Password = "wrongpassword"
         };
 
-        A.CallTo(() => _signInManager.PasswordSignInAsync(
-                request.Email, request.Password, false, false))
-            .Returns(Microsoft.AspNetCore.Identity.SignInResult.Failed);
+        var user = new ApplicationUser
+        {
+            Email = request.Email,
+            UserName = request.Email
+        };
+
+        A.CallTo(() => _userManager.FindByEmailAsync(request.Email))
+            .Returns(Task.FromResult(user));
+
+        A.CallTo(() => _userManager.CheckPasswordAsync(user, request.Password))
+            .Returns(Task.FromResult(false));
 
         // Act
         var exception = await Assert.ThrowsAsync<AppException>(

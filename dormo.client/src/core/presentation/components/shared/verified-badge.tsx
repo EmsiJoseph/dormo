@@ -1,12 +1,12 @@
 ﻿import {Badge} from "@/core/presentation/components/ui/badge";
-import {Check} from "lucide-react";
+import { ShieldCheck} from "lucide-react";
 
 export default function VerifiedBadge({isVerified}: { isVerified: boolean }) {
     return (
         isVerified ? (
             <Badge
-                className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 flex items-center gap-1">
-                <Check className="h-4 w-4"/>
+                className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 flex items-center gap-1">
+                <ShieldCheck className="h-4 w-4"/>
                 <span>Verified</span>
             </Badge>
         ) : <Badge

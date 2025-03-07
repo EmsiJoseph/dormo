@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace Dormo.Server.Data.Models;
 
-public class Image : BaseEntity<int>
+public class DormImage : BaseEntity<int>
 {
     [Required] public int DormId { get; set; }
 

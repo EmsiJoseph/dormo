@@ -5,9 +5,18 @@ import {Image} from "@/core/domain/entities/Image";
 import {Room} from "@/core/domain/entities/Room";
 import {Owner} from "@/core/domain/entities/User";
 import {Category} from "@/core/domain/entities/Category";
+import {DormReview} from "@/core/domain/entities/DormReview.ts";
 
-export interface Dorm extends DormListing {
+export interface DormDto extends Dorm {
+    reviewCount: number;
+    similarDorms: DormListingDto[];
+}
+
+export interface Dorm extends DormListingDto {
     description: string;
+    reviews: DormReview[];
+    securityDeposit: number;
+    safetyScore: number;
     owner: Owner;
     latitude: number;
     longitude: number;
@@ -18,11 +27,10 @@ export interface Dorm extends DormListing {
 }
 
 
-export interface DormListing {
+export interface DormListingDto {
     id: number;
     name: string;
     address: string;
-    ownerId: string;
     isAvailable: boolean;
     isVerified: boolean;
     minPrice: number;

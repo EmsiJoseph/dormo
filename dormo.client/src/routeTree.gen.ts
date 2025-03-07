@@ -18,6 +18,7 @@ import { Route as rootRoute } from './routes/__root'
 
 const AboutLazyImport = createFileRoute('/about')()
 const IndexLazyImport = createFileRoute('/')()
+const DormDormIdLazyImport = createFileRoute('/dorm/$dormId')()
 
 // Create/Update Routes
 
@@ -32,6 +33,12 @@ const IndexLazyRoute = IndexLazyImport.update({
   path: '/',
   getParentRoute: () => rootRoute,
 } as any).lazy(() => import('./routes/index.lazy').then((d) => d.Route))
+
+const DormDormIdLazyRoute = DormDormIdLazyImport.update({
+  id: '/dorm/$dormId',
+  path: '/dorm/$dormId',
+  getParentRoute: () => rootRoute,
+} as any).lazy(() => import('./routes/dorm/$dormId.lazy').then((d) => d.Route))
 
 // Populate the FileRoutesByPath interface
 
@@ -51,6 +58,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutLazyImport
       parentRoute: typeof rootRoute
     }
+    '/dorm/$dormId': {
+      id: '/dorm/$dormId'
+      path: '/dorm/$dormId'
+      fullPath: '/dorm/$dormId'
+      preLoaderRoute: typeof DormDormIdLazyImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -59,36 +73,41 @@ declare module '@tanstack/react-router' {
 export interface FileRoutesByFullPath {
   '/': typeof IndexLazyRoute
   '/about': typeof AboutLazyRoute
+  '/dorm/$dormId': typeof DormDormIdLazyRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexLazyRoute
   '/about': typeof AboutLazyRoute
+  '/dorm/$dormId': typeof DormDormIdLazyRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexLazyRoute
   '/about': typeof AboutLazyRoute
+  '/dorm/$dormId': typeof DormDormIdLazyRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about'
+  fullPaths: '/' | '/about' | '/dorm/$dormId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about'
-  id: '__root__' | '/' | '/about'
+  to: '/' | '/about' | '/dorm/$dormId'
+  id: '__root__' | '/' | '/about' | '/dorm/$dormId'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexLazyRoute: typeof IndexLazyRoute
   AboutLazyRoute: typeof AboutLazyRoute
+  DormDormIdLazyRoute: typeof DormDormIdLazyRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexLazyRoute: IndexLazyRoute,
   AboutLazyRoute: AboutLazyRoute,
+  DormDormIdLazyRoute: DormDormIdLazyRoute,
 }
 
 export const routeTree = rootRoute
@@ -102,7 +121,8 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/about"
+        "/about",
+        "/dorm/$dormId"
       ]
     },
     "/": {
@@ -110,6 +130,9 @@ export const routeTree = rootRoute
     },
     "/about": {
       "filePath": "about.lazy.tsx"
+    },
+    "/dorm/$dormId": {
+      "filePath": "dorm/$dormId.lazy.tsx"
     }
   }
 }

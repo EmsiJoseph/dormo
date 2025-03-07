@@ -6,7 +6,6 @@ public class DormRequest
     public string Description { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
 
-
     public string OwnerId { get; set; } = null!; // Foreign key to User (DormOwner)
 
     public int CategoryId { get; set; } // Foreign key to Category
@@ -16,6 +15,8 @@ public class DormRequest
     public decimal Longitude { get; set; }
 
     public bool IsAvailable { get; set; } = true;
+    
+    public decimal SecurityDeposit { get; set; }
 
     public List<ImageRequest> Images { get; set; } = new List<ImageRequest>();
     public List<RoomRequest> Rooms { get; set; } = new List<RoomRequest>();

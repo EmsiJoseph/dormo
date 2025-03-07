@@ -33,6 +33,7 @@ public class DormService : IDormService
             Latitude = request.Latitude,
             Longitude = request.Longitude,
             OwnerId = request.OwnerId!,
+            SecurityDeposit = request.SecurityDeposit,
             CategoryId = request.CategoryId,
             IsAvailable = true,
             CreatedAt = DateTime.UtcNow
@@ -49,10 +50,13 @@ public class DormService : IDormService
     public async Task<DormDto?> GetByIdAsync(int id, bool includeDeleted = false)
     {
         var query = _context.Dorms
+            .Include(d => d.Owner)
+            .Include(d => d.Rooms)
             .Include(d => d.Images)
             .Include(d => d.DormTags).ThenInclude(dt => dt.Tag)
-            .Include(d => d.DormAmenities).ThenInclude(da => da.Amenity)
             .Include(d => d.Category)
+            .Include(d => d.Reviews).ThenInclude(r => r.Tenant) // Include the Tenant data
+            .AsSplitQuery() // Use split query for better performance with multiple includes
             .AsQueryable();
 
         if (!includeDeleted)
@@ -82,7 +86,7 @@ public class DormService : IDormService
 
         // Always ensure a deterministic ordering - fixed the ordering logic
         IOrderedQueryable<Dorm> orderedQuery;
-        
+
         if (!string.IsNullOrEmpty(filter.SortBy))
         {
             // Use the sorting method that returns IOrderedQueryable
@@ -93,7 +97,7 @@ public class DormService : IDormService
             // Apply default ordering if no sort specified
             orderedQuery = filteredQuery.OrderBy(d => d.Id);
         }
-        
+
         // Add secondary ordering for consistent paging
         orderedQuery = orderedQuery.ThenBy(d => d.Id);
 
@@ -127,6 +131,7 @@ public class DormService : IDormService
             HasNext = pageNumber * pageSize < totalItems
         };
     }
+
     public async Task<bool> UpdateAsync(DormDto dto)
     {
         ValidateDormRequest(dto);
@@ -187,7 +192,6 @@ public class DormService : IDormService
         var dorms = await _context.Dorms
             .Include(d => d.Images)
             .Include(d => d.DormTags).ThenInclude(dt => dt.Tag)
-            .Include(d => d.DormAmenities).ThenInclude(da => da.Amenity)
             .Include(d => d.Category)
             .Where(d => !d.IsDeleted)
             .ToListAsync();
@@ -204,12 +208,12 @@ public class DormService : IDormService
         foreach (int amenityId in amenityIds)
         {
             var dormAmenity =
-                await _context.DormAmenities.FirstOrDefaultAsync(da =>
-                    da.DormId == dormId && da.AmenityId == amenityId);
+                await _context.DormTags.FirstOrDefaultAsync(dt =>
+                    dt.DormId == dormId && dt.TagId == amenityId);
             if (dormAmenity != null) continue;
 
-            dormAmenity = new DormAmenity { DormId = dormId, AmenityId = amenityId };
-            _context.DormAmenities.Add(dormAmenity);
+            dormAmenity = new DormTag { DormId = dormId, TagId = amenityId };
+            _context.DormTags.Add(dormAmenity);
         }
 
         await _context.SaveChangesAsync();
@@ -257,7 +261,7 @@ public class DormService : IDormService
                 if (imageRequest.Order < 0)
                     throw AppException.ValidationError("Image order cannot be negative", "Order");
 
-                var newImage = new Image
+                var newImage = new DormImage
                 {
                     Url = imageRequest.Url,
                     Order = imageRequest.Order,
@@ -329,7 +333,7 @@ public class DormService : IDormService
     }
 
 
-   private IOrderedQueryable<Dorm> ApplySorting(IQueryable<Dorm> query, string sortBy, bool isDescending)
+    private IOrderedQueryable<Dorm> ApplySorting(IQueryable<Dorm> query, string sortBy, bool isDescending)
     {
         return sortBy.ToLower() switch
         {
@@ -384,8 +388,9 @@ public class DormService : IDormService
                                      d.Description.Contains(filter.SearchTerm));
 
         if (filter.AmenityIds?.Any() == true)
-            query = query.Where(d => d.DormAmenities
-                .Any(da => filter.AmenityIds.Contains(da.AmenityId)));
+            query = query
+                .Where(d => d.DormTags
+                    .Any(dt => filter.AmenityIds.Contains(dt.TagId) && dt.Tag!.Type == TagType.Amenity));
 
         if (filter.TagIds?.Any() == true)
             query = query.Where(d => d.DormTags
@@ -407,38 +412,64 @@ public class DormService : IDormService
             Id = dorm.Id,
             Name = dorm.Name,
             Description = dorm.Description,
+            CategoryName = dorm.Category!.Name,
+            Rating = dorm.Rating,
+            ReviewCount = dorm.Reviews?.Count ?? 0,
+            // TODO: Safety Score
+            SafetyScore = 0,
             Address = dorm.Address,
+            SecurityDeposit = dorm.SecurityDeposit,
             Latitude = dorm.Latitude,
             Longitude = dorm.Longitude,
-            Owner = new OwnerDto
-            {
-                Id = dorm.Owner!.Id,
-                Email = dorm.Owner?.Email,
-                FirstName = dorm.Owner?.FirstName,
-                LastName = dorm.Owner?.LastName,
-                ContactInfo = dorm.Owner?.ContactInfo,
-                BirthYear = dorm.Owner!.Dob.Year,
-                IsVerified = dorm.Owner.IsVerified
-            },
-            Category = new CategoryDto
-            {
-                Name = dorm.Category!.Name,
-                Description = dorm.Category.Description,
-                ParentId = dorm.Category.ParentId
-            },
+            Owner = dorm.Owner != null
+                ? new OwnerDto
+                {
+                    Id = dorm.Owner.Id,
+                    Email = dorm.Owner.Email,
+                    FirstName = dorm.Owner.FirstName,
+                    LastName = dorm.Owner.LastName,
+                    ContactInfo = dorm.Owner.ContactInfo,
+                    BirthYear = dorm.Owner.Dob.Year,
+                    IsVerified = dorm.Owner.IsVerified,
+                    JoinedAt = DateTimeUtils.GetTimeAgo(dorm.Owner.CreatedAt)
+                }
+                : new OwnerDto(),
             Images =
             [
-                ..dorm.Images.Select(di => new ImageRequest
+                ..dorm.Images?.Select(di => new ImageRequest
                 {
                     Url = di.Url,
                     Order = di.Order,
                     Caption = di.Caption,
                     IsPrimary = di.IsPrimary
-                })
+                }) ?? []
+            ],
+            InitialReviews =
+            [
+                ..dorm.Reviews?.Select(dr => new ReviewDto
+                {
+                    Id = dr.Id,
+                    Tenant = dr.Tenant != null
+                        ? new UserDto
+                        {
+                            Id = dorm.Owner.Id,
+                            Email = dorm.Owner.Email,
+                            FirstName = dorm.Owner.FirstName,
+                            LastName = dorm.Owner.LastName,
+                            ContactInfo = dorm.Owner.ContactInfo,
+                            BirthYear = dorm.Owner.Dob.Year,
+                            IsVerified = dorm.Owner.IsVerified,
+                            JoinedAt = DateTimeUtils.GetTimeAgo(dorm.Owner.CreatedAt)
+                        }
+                        : new UserDto(),
+                    Rating = dr.Rating,
+                    ReviewText = dr.ReviewText,
+                    CreatedAt = dr.CreatedAt
+                }) ?? []
             ],
             Rooms =
             [
-                ..dorm.Rooms.Select(dr => new RoomDto
+                ..dorm.Rooms?.Select(dr => new RoomDto
                 {
                     Id = dr.Id,
                     RoomNumber = dr.RoomNumber,
@@ -446,33 +477,61 @@ public class DormService : IDormService
                     PricePerMonth = dr.PricePerMonth,
                     Capacity = dr.Capacity,
                     IsAvailable = dr.IsAvailable
-                })
+                }) ?? []
             ],
             Amenities =
             [
-                ..dorm.Amenities
-                    .Where(da => da != null)
-                    .Select(da => new AmenityDto
-                    {
-                        Name = da!.Name,
-                        Description = da.Description,
-                        Icon = da.Icon
-                    })
-            ],
-            Tags =
-            [
-                ..dorm.DormTags
+                ..dorm.DormTags?
                     .Where(dt => dt.Tag != null)
+                    .Where(dt => dt.Tag.Type == TagType.Amenity)
                     .Select(dt => new TagDto
                     {
                         Name = dt.Tag!.Name,
                         Description = dt.Tag.Description,
-                        Icon = dt.Tag.Icon
-                    })
+                        Icon = dt.Tag.Icon,
+                        Type = dt.Tag.Type
+                    }) ?? []
             ],
+            Tags =
+            [
+                ..dorm.DormTags?
+                    .Where(dt => dt.Tag != null)
+                    .Where(dt => dt.Tag.Type == TagType.Tag)
+                    .Select(dt => new TagDto
+                    {
+                        Name = dt.Tag!.Name,
+                        Description = dt.Tag.Description,
+                        Icon = dt.Tag.Icon,
+                        Type = dt.Tag.Type
+                    }) ?? []
+            ],
+            SimilarDorms = GetSimilarDorms(dorm),
             IsAvailable = dorm.IsAvailable,
             MinPrice = dorm.Rooms?.Any() == true ? dorm.Rooms.Min(r => r.PricePerMonth) : 0,
         };
+    }
+
+    private List<DormListingDto> GetSimilarDorms(Dorm dorm)
+    {
+        // Find similar dorms based on category, price range, and location
+        var minPrice = dorm.Rooms?.Any() == true ? dorm.Rooms.Min(r => r.PricePerMonth) * 0.7m : 0;
+        var maxPrice = dorm.Rooms?.Any() == true ? dorm.Rooms.Min(r => r.PricePerMonth) * 1.3m : 0;
+        
+        var similarDorms = _context.Dorms
+            .Include(d => d.Category)
+            .Include(d => d.Rooms)
+            .Include(d => d.Images)
+            .Where(d => d.Id != dorm.Id)  // Exclude the current dorm
+            .Where(d => !d.IsDeleted && d.IsAvailable)
+            .Where(d => d.CategoryId == dorm.CategoryId)  // Same category
+            .Where(d => d.Rooms.Any(r => r.PricePerMonth >= minPrice && r.PricePerMonth <= maxPrice))  // Similar price range
+            .AsEnumerable()  // Switch to client evaluation for distance calculation
+            .Where(d => CalculateDistance(dorm.Latitude, dorm.Longitude, d.Latitude, d.Longitude) <= 10)  // Within 10km
+            .OrderBy(d => CalculateDistance(dorm.Latitude, dorm.Longitude, d.Latitude, d.Longitude))  // Order by proximity
+            .Take(3)  // Limit to 3 similar dorms
+            .ToList();
+
+        return similarDorms.Select(MapToDormListingDto).ToList();
     }
 
     private DormListingDto MapToDormListingDto(Dorm dorm)
@@ -482,7 +541,6 @@ public class DormService : IDormService
             Id = dorm.Id,
             Name = dorm.Name,
             Address = dorm.Address,
-            OwnerId = dorm.OwnerId,
             IsAvailable = dorm.IsAvailable,
             IsVerified = dorm.IsVerified,
             MinPrice = dorm.Rooms?.Any() == true ? dorm.Rooms.Min(r => r.PricePerMonth) : 0,
@@ -494,7 +552,7 @@ public class DormService : IDormService
                 Order = i.Order,
                 Caption = i.Caption,
                 IsPrimary = i.IsPrimary
-            }).ToArray(),
+            }).ToList(),
             CategoryName = dorm.Category?.Name ?? "Uncategorized"
         };
     }

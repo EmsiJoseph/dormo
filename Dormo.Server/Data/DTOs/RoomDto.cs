@@ -1,4 +1,5 @@
-﻿using Dormo.Server.Data.Requests;
+﻿using Dormo.Server.Data.Models;
+using Dormo.Server.Data.Requests;
 
 namespace Dormo.Server.Data.DTOs;
 

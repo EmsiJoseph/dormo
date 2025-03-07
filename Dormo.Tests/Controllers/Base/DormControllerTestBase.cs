@@ -30,10 +30,14 @@ public abstract class DormControllerTestBase : IClassFixture<DormoFixture>
         _controller = new Server.Controllers.DormController(_dormService, _userManager);
         _output = output;
 
-        SetupTestUser();
+        // Set up authentication and user
+        SetupControllerWithIdentity();
+        SetupDefaultMocks();
     }
 
-    private void SetupTestUser()
+    // Setup methods for common test configurations
+    
+    protected void SetupControllerWithIdentity()
     {
         var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
         {
@@ -46,8 +50,41 @@ public abstract class DormControllerTestBase : IClassFixture<DormoFixture>
             HttpContext = new DefaultHttpContext { User = user }
         };
     }
+    
+    protected void SetupDefaultMocks()
+    {
+        // Set up the user manager to return a test user
+        var testUser = new ApplicationUser 
+        { 
+            Id = TestUserId, 
+            FirstName = TestUserFirstName, 
+            LastName = TestUserLastName 
+        };
+        
+        A.CallTo(() => _userManager.FindByIdAsync(TestUserId))
+            .Returns(testUser);
+            
+        // Set up dormService to return empty results by default
+        A.CallTo(() => _dormService.GetAllAsync(A<DormFilter>._))
+            .Returns(new PaginatedDto<DormListingDto> { Items = new List<DormListingDto>() });
+    }
+    
+    // Setup methods for specific scenarios
+    
+    protected void SetupDormServiceToReturnDorms(IEnumerable<DormListingDto> dorms)
+    {
+        A.CallTo(() => _dormService.GetAllAsync(A<DormFilter>._))
+            .Returns(new PaginatedDto<DormListingDto> { Items = dorms.ToList() });
+    }
+    
+    protected void SetupDormCreation(DormDto resultDorm)
+    {
+        A.CallTo(() => _dormService.CreateAsync(A<DormRequest>._))
+            .Returns(resultDorm);
+    }
 
-    // Common helper methods
+    // Helper methods for creating test data
+    
     protected static List<ImageRequest> GenerateValidImageRequests(int count = 3)
     {
         return Enumerable.Range(1, count)
@@ -61,41 +98,27 @@ public abstract class DormControllerTestBase : IClassFixture<DormoFixture>
             .ToList();
     }
 
-    protected static List<RoomDto> GenerateValidRoomDtos(int count = 2)
-    {
-        return Enumerable.Range(1, count)
-            .Select(i => new RoomDto
-            {
-                Id = i,
-                RoomNumber = $"{i}01",
-                Description = $"Room {i}",
-                PricePerMonth = 5000 * i,
-                Capacity = Math.Min(i, BusinessRulesConstants.Room.MaxCapacity),
-                IsAvailable = true
-            })
-            .ToList();
-    }
-    protected static List<RoomRequest> GenerateValidRoomRequests(int count = 2)
+    protected static List<RoomRequest> GenerateValidRoomRequests(int count = 2, decimal basePrice = 5000)
     {
         return Enumerable.Range(1, count)
             .Select(i => new RoomRequest
             {
                 RoomNumber = $"{i}01",
                 Description = $"Room {i}",
-                PricePerMonth = 5000 * i,
+                PricePerMonth = basePrice * i,
                 Capacity = Math.Min(i, BusinessRulesConstants.Room.MaxCapacity),
                 IsAvailable = true
             })
             .ToList();
     }
 
-    protected static DormRequest CreateValidDormRequest()
+    protected static DormRequest CreateValidDormRequest(string name = "Test Dorm", string address = "123 Test St.")
     {
         return new DormRequest
         {
-            Name = "Test Dorm",
+            Name = name,
             Description = "Test Description",
-            Address = "123 Test St.",
+            Address = address,
             Latitude = 14.5m,
             Longitude = 121.0m,
             CategoryId = 1,
@@ -103,41 +126,45 @@ public abstract class DormControllerTestBase : IClassFixture<DormoFixture>
             TagIds = new List<int> { 1, 2 },
             Images = GenerateValidImageRequests(),
             Rooms = GenerateValidRoomRequests(),
-            
         };
     }
 
-    protected static DormDto CreateValidDormDto(int id = 0, bool isDeleted = false)
+    protected static DormDto CreateValidDormDto(int id = 0)
     {
-      
         return new DormDto
         {
             Id = id,
             Name = "Test Dorm",
             Description = "Test Description",
+            Rooms = GenerateValidRoomRequests().Select(r => new RoomDto
+            {
+                RoomNumber = r.RoomNumber,
+                Description = r.Description,
+                PricePerMonth = r.PricePerMonth,
+                Capacity = r.Capacity,
+                IsAvailable = r.IsAvailable,
+            }).ToList(),
             Address = "123 Test St.",
             Latitude = 14.5m,
             Longitude = 121.0m,
-            Category = new CategoryDto
-            {
-                Name = "Test Category"
-            },
+            CategoryId = 1,
+            CategoryName = "Test Category",
+            Owner = new OwnerDto { Id = TestUserId, FirstName = TestUserFirstName, LastName = TestUserLastName },
             AmenityIds = new List<int> { 1, 2 },
             TagIds = new List<int> { 1, 2 },
-            Images = GenerateValidImageRequests(),
-            Rooms = GenerateValidRoomDtos(),
         };
     }
 
-    protected void SetupSuccessfulUserLookup()
+    protected static DormListingDto CreateValidDormListingDto(int id = 0, string ownerId = TestUserId)
     {
-        A.CallTo(() => _userManager.FindByIdAsync(TestUserId))
-            .Returns(new ApplicationUser { Id = TestUserId, FirstName = TestUserFirstName, LastName = TestUserLastName });
-    }
-
-    protected void SetupEmptyDormsList()
-    {
-        A.CallTo(() => _dormService.GetAllAsync(A<DormFilter>._))
-            .Returns(new PaginatedDto<DormDto> { Items = new List<DormDto>() });
+        return new DormListingDto
+        {
+            Id = id,
+            Name = "Test Dorm",
+            Address = "123 Test St.",
+            CategoryName = "Test Category",
+            OwnerId = ownerId,
+            Images = GenerateValidImageRequests(),
+        };
     }
 }
